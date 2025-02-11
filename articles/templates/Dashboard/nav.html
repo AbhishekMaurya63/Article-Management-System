@@ -1,0 +1,272 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+
+    {% load django_bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    {% block style %}{% endblock %}
+  </head>
+  <body>
+    <!-- Toggle Button for Small Screens -->
+    <div class="container-fluid">
+      <!-- Top Navbar -->
+      <div class="row topnavbar">
+        <div class="col-sm-5 ltnav">
+          <!-- Logo and Website Name -->
+          <a href="{% url 'articles:Dashboard' %}" class="navbar-brand">
+            <img src="https://media.istockphoto.com/id/1330788505/vector/news-paper-care-logo-template-design.jpg?s=612x612&w=0&k=20&c=c9loKIAmPQ06pPh07dJny2iNKEv4BMhMXPZx9AGf8VE=" alt="Logo" class="logo rounded-circle p-2">
+            <span class="website-name">Article Management System</span>
+          </a>
+        </div>
+        <div class="col-sm-7 rtnav">
+          <!-- Right Navbar Content (Notification, User Info, Dropdown) -->
+          <ul class="navbar-nav">
+            <!-- Notification Icon -->
+            {% comment %} <li class="nav-item d-none d-sm-block">
+              <a class="nav-link" href="#">
+                <i class="fas fa-bell "></i>
+              </a>
+            </li> {% endcomment %}
+
+            <!-- User Info and Dropdown -->
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRI9lRck6miglY0SZF_BZ_sK829yiNskgYRUg&s" id="userImg" alt="User Image" class="user-image">
+                <span class="username" id='username'>Username</span>
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'articles:Profile' %}">
+                     <i class="fas fa-user"></i> Profile
+                  </a>
+                </li>
+                {% comment %} <!-- <li class="nav-item d-block d-sm-none">
+                  <a class="nav-link" href="#">
+                    <i class="fas fa-bell"></i> Notification
+                  </a>
+                </li> --> {% endcomment %}
+                {% comment %} <li><a class="nav-link" href="#"><i class="fas fa-cog"></i> Settings</a></li> {% endcomment %}
+                <li id="logout-btn"><a class="nav-link" href="#"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="row content_row">
+        <!-- Left Sidebar (optional) -->
+       <!-- Left Sidebar -->
+       <div class="col-md-3 col-xl-2  left-navbar " style="left: 0px; transition: 0.5s;" id="left-navbar">
+        <button class="btn btn-toggle d-none" id="toggle-btn"><i class="fas fa-bars"></i></button>
+        <ul class="nav flex-column w-100">
+          <li class="nav-item" id="dashboard">
+              <a href="{% url 'articles:Dashboard'%}" class="nav-link">
+              <i class="fas fa-tachometer-alt"></i> Dashboard
+          </a>
+          </li>
+          <li class="nav-item">
+              <a href="{% url 'articles:Articles'%}" class="nav-link">
+                  <i class="fas fa-file-alt"></i> Articles
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="{% url 'articles:Users'%}" class="nav-link">
+                  <i class="fas fa-users"></i> Users
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="{% url 'index'%}" class="nav-link">
+                  <i class="fas fa-eye"></i> Article View
+              </a>
+          </li>
+      {% comment %}     <li class="nav-item">
+              <a href="{% url 'articles:Activity'%}" class="nav-link">
+                  <i class="fas fa-history"></i> Activity
+              </a>
+          </li> {% endcomment %}
+      </ul>
+      </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9 col-xl-10  content" id="content">
+          {% block content %}
+          {% endblock %}
+        </div>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      // Toggle the left navbar visibility on small screens
+      const toggleBtn = document.getElementById('toggle-btn');
+      const leftNavbar = document.getElementById('left-navbar');
+    
+      toggleBtn.addEventListener('click', function() {
+        // Toggle the `left` property of `leftNavbar`
+        if (leftNavbar.style.left === "-230px") {
+          leftNavbar.style.left = "0px"; // Move back to the original position
+        } else {
+          leftNavbar.style.left = "-230px"; // Move 230px to the right
+        }
+      });
+    
+      window.onload = async function () {
+        const token = localStorage.getItem("token");
+        const refresh = localStorage.getItem("refresh_token");
+        const data = JSON.parse(localStorage.getItem("user"));
+
+    
+        // Check if token and user data are available
+        if (!token || !data) {
+          alert("You are not logged in");
+          window.location.href = "/users/login";
+          return;
+        }
+        document.getElementById("username").innerText = data.username;
+        document.getElementById('userImg').src = data.profile.profile_picture ? data.profile.profile_picture : '{% static "images/default-profile.png" %}';
+        // Verify token with backend
+        try {
+          const response = await fetch("/api/validate-token/", {
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        
+          if (!response.ok) {
+            throw new Error("Invalid token");
+          }
+          else{
+            setTokenRefreshTimer();
+          }
+        } catch (err) {
+          alert(err);
+          localStorage.removeItem("token"); // Clear invalid token
+          window.location.href = "/users/login";
+          return;
+        }
+
+    
+        // Role-based navigation control
+        const role = data.role;  // Get the user role from localStorage
+    
+        // Based on the user's role, modify the navbar
+        if (role === 'Journalist') {
+          // Hide User and Analytics links for journalists
+          document.querySelector("a[href='{% url 'articles:Users' %}']").parentElement.style.display = 'none';
+        } 
+        else if (role === 'Editor') {
+          // Editors can only access Articles and Dashboard
+          document.querySelector("a[href='{% url 'articles:Users' %}']").parentElement.style.display = 'none';
+        } 
+        else if (role === 'User') {
+          document.querySelector("a[href='{% url 'articles:Users' %}']").parentElement.style.display = 'none';
+          document.querySelector("a[href='{% url 'articles:Articles' %}']").parentElement.style.display = 'none';
+          document.getElementById('dashboard').style.display = 'none';
+        }
+      };
+    
+      // Logout functionality
+      document.getElementById("logout-btn").addEventListener("click", function () {
+        const token = localStorage.getItem("token");
+        const refreshToken = localStorage.getItem('refresh_token');
+        if (token) {
+          fetch("/api/logout/", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ refresh: refreshToken })
+          })
+          .then(response => {
+            if (response.ok) {
+              // Clear localStorage and redirect on successful logout
+              localStorage.removeItem("token");
+              localStorage.removeItem('refresh');
+              localStorage.removeItem('refresh_token');
+              localStorage.removeItem("user");
+              window.location.href = "/users/login"; // Redirect to login
+            } else {
+              response.json().then(data => {
+                console.error("Logout failed:", data);
+                alert("Failed to logout. Please try again.");
+              });
+            }
+          })
+          .catch(error => {
+            console.error("Error during logout:", error);
+            alert("An error occurred during logout.");
+          });
+        } else {
+          // If no token is found, simply redirect to login
+          window.location.href = "/users/login";
+        }
+      });
+      document.getElementById('back-button').addEventListener('click', function() {
+        window.history.back(); // Go back to the previous page
+      });
+
+
+      function decodeToken(token) {
+    const payload = token.split('.')[1]; // Get the payload part of the token
+    return JSON.parse(atob(payload)); // Decode Base64 payload
+}
+function setTokenRefreshTimer() {
+    const accessToken = localStorage.getItem('token');
+    const refreshToken = localStorage.getItem('refresh_token');
+
+    if (accessToken && refreshToken) {
+        const decodedToken = decodeToken(accessToken);
+        const expiryTime = decodedToken.exp * 1000; // Convert to milliseconds
+        const currentTime = Date.now();
+        const timeUntilExpiry = expiryTime - currentTime;
+
+        // Set a timer to refresh the token 1 minute before expiry
+        if (timeUntilExpiry > 60000) {
+            setTimeout(() => {
+                refreshAccessToken(refreshToken);
+            }, timeUntilExpiry - 60000); // Refresh 1 minute before expiry
+        } else {
+            refreshAccessToken(refreshToken); // Token is close to expiry, refresh immediately
+        }
+    }
+}
+
+async function refreshAccessToken(refreshToken) {
+    try {
+        const response = await fetch('/api/token/refresh/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refresh: refreshToken }),
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.removeItem("token");
+            localStorage.setItem('token', data.access);
+            console.log('Access token refreshed');
+            setTokenRefreshTimer(); // Set timer for the next refresh
+        } else {
+            console.error('Failed to refresh token, logging out');
+            logoutUser();
+        }
+    } catch (error) {
+        console.error('Error refreshing token:', error);
+        logoutUser();
+    }
+}
+    </script>
+    
+    {% block script %}{% endblock %}
+     <script src="{%static 'js/dasScript.js'%}"></script>
+     <script scr="{%static 'js/articles.js' %}"></script>
+  </body>
+</html>

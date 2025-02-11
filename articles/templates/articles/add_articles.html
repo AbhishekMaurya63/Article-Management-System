@@ -1,0 +1,296 @@
+
+{% extends "DashBoard/nav.html" %}
+{% load static %}
+{% block title %}Add Article{% endblock %}
+{% block style %}<link href="{% static 'css/articles.css' %}" rel="stylesheet">
+<!-- Include Quill's styles -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+{% endblock %}
+{% block content %}
+<div class="container-fluid article_container pb-5 mb-5" style="padding-bottom: 100px;"> 
+    <div class="row mb-4">
+        <!-- Back Button (Top Left) -->
+        <div class="col-12">
+           <button class="btn btn-secondary" id="back-button">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+        </div>
+      </div>
+    <!-- Page 1 -->
+    <div id="form-page-1" class="card formcard shadow-sm p-4">
+        <h2 class="text-center mb-4">Add Your Article</h2>
+        <form id='page1'>
+            <div id="form-err" class="err"></div>
+            <div class="mb-3">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" id="title" class="form-control" placeholder="Enter article title">
+                <div id="title-error" class="err"></div>
+            </div>
+            <div class="mb-3">
+                <label for="subtitle" class="form-label">Subtitle</label>
+                <input type="text" id="subtitle" class="form-control" placeholder="Enter article subtitle">
+                <div id="subtitle-error" class="err"></div>
+            </div>
+
+            <div class="mb-3">
+                <label>Content</label>
+                <div id="content-container">
+                    <textarea id="editor-container"></textarea>
+                </div>
+                <div id="word-count">Words: 0</div><br>
+                <div id="content-error" class="err"></div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="author_name" class="form-label">Author Name</label>
+                <input type="text" id="author_name" class="form-control" placeholder="Enter your name">
+                <div id="author-error" class="err"></div>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" id="email" class="form-control" placeholder="Enter your email" disabled>
+                <div id="email-error" class="err"></div>
+            </div>
+            <div class="text-end">
+                <button type="button" id="next-btn" class="btn btn-primary">Next</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Page 2 -->
+    <div id="form-page-2" class="card formcard shadow-sm p-4" style="display: none;">
+        <h2 class="text-center mb-4">Page 2: Additional Details</h2>
+        <form id='page2'>
+            <div id="form-err" class="err"></div>
+            <div class="mb-3">
+                <label for="image" class="form-label">Article Image</label>
+                <input type="file" id="image" class="form-control" accept=".jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp,.heic,.heif,.ico,.psd,.avif">
+                <div id="image-error" class="err"></div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Tags</label>
+                <div id="predefined-tags-container">
+                    <span class="predefined-tag" onclick="addTag('Politics')">Politics</span>
+                    <span class="predefined-tag" onclick="addTag('Sports')">Sports</span>
+                    <span class="predefined-tag" onclick="addTag('Tech')">Tech</span>
+                    <span class="predefined-tag" onclick="addTag('Business')">Business</span>
+                    <span class="predefined-tag" onclick="addTag('Health')">Health</span>
+                    <span class="predefined-tag" onclick="addTag('Entertainment')">Entertainment</span>
+                </div>
+                <input type="text" id="tags-input" class="form-control" placeholder="Add tags (Press Enter or Comma)">
+                <div id="tags-suggestions"></div> <!-- Suggestions will be shown here -->
+                <div id="tags-list"></div> <!-- Display added tags -->
+                
+                <div id="tags-error" class="err"></div>
+            </div>
+            <div class="mb-3">
+                <label for="category" class="form-label">Category</label>
+                <select id="category" class="form-select">
+                    <option value="">Select Category</option>
+                    <option value="news">News</option>
+                    <option value="opinion">Opinion</option>
+                    <option value="feature">Feature</option>
+                    <option value="technology">Technology</option>
+                    <option value="health">Health</option>
+                    <option value="business">Business</option>
+                    <option value="entertainment">Entertainment</option>
+                    <option value="politics">Politics</option>
+                    <option value="sports">Sports</option>
+                    <option value="lifestyle">Lifestyle</option>
+                    <option value="education">Education</option>
+                    <option value="environment">Environment</option>
+                    <option value="culture">Culture</option>
+                </select>
+                <div id="category-error" class="err"></div>
+            </div>
+            <div class="mb-3">
+                <label for="publish_date" class="form-label">Publish Date</label>
+                <input type="date" id="publish_date" class="form-control" placeholder="Select publish date "/>
+                <div id="publish_date-error" class="err"></div>
+            </div>
+            <div class="row d-flex justify-content-between mb-3 gap-2">
+                <button type="button" id="add-gallery-btn" class="col-sm-2 btn btn-outline-primary text-center gap-2" onclick="openimagemodal()">
+                    <i class="fas fa-images"></i> Add Gallery
+                </button>
+                <button type="button" id="add-location-btn" class="col-sm-2 btn btn-outline-secondary text-center gap-2" onclick="openmapmodal()">
+                    <i class="fas fa-map-marker-alt"></i> Add Location
+                </button>
+            </div>
+            <div class="mb-3">
+                <div class="form-check">
+                    <input type="checkbox" id="agree_to_terms" class="form-check-input">
+                    <label for="agree_to_terms" class="form-check-label">I agree to the terms and conditions</label>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between">
+                <button type="button" id="prev-btn" class="btn btn-secondary">Back</button>
+                <button type="button" id="submit-btn" class="btn btn-success">
+                    <span id="loader" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display:none;"></span>
+                    Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal for Adding Multiple Images with Captions -->
+<div class="modal fade" id="addImagesModal" style="overflow: hidden;" tabindex="-1" aria-labelledby="addImagesModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="width: 90vw; height: 80vh;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addImagesModalLabel">Add Images</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="imageUploadForm">
+                    <!-- Scrollable Wrapper -->
+                    <div style="max-height: 300px; overflow-y: auto;" id="scrollableImageWrapper">
+                        <div id="imageContainer" class="d-flex flex-wrap gap-3 justify-content-center">
+                            <!-- Initial Placeholder for Images -->
+                            <div id="addImageButton" class="add-image-placeholder">
+                                <button type="button" class="btn btn-light border d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;" onclick="triggerImageUpload()">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <input type="file" id="hiddenFileInput" style="display: none;" accept="image/*" onchange="handleImageUpload(this)" accept=".jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp,.heic,.heif,.ico,.psd,.avif">
+                            </div>
+                        </div>
+                    </div>
+                    <small class="text-danger mt-2 d-block" id="imageError"></small>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveImages">Save Images</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- <div class="modal fade" id="locationModal" tabindex="-1" style="overflow: hidden;" aria-labelledby="locationModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false"> -->
+    <div class="modal fade" id="locationModal" style="overflow: hidden;" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="width: 90vw; height: 80vh; overflow: hidden; border-bottom: 20px solid #fff;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="locationModalLabel">Select Location</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input
+                            type="text"
+                            id="locationSearch"
+                            class="form-control mb-2"
+                            placeholder="Search location (e.g., village, street, postal code, country)"
+                        />
+                        <div class="row g-2">
+                            <div class="col">
+                                <input
+                                    type="text"
+                                    id="latitudeInput"
+                                    class="form-control"
+                                    placeholder="Enter Latitude"
+                                    disabled
+                                />
+                            </div>
+                            <div class="col">
+                                <input
+                                    type="text"
+                                    id="longitudeInput"
+                                    class="form-control"
+                                    placeholder="Enter Longitude"
+                                    disabled
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div id="mapContainer" style="width: 100%; height: 300px;"></div>
+                </div>
+                <div class="modal-footer" style="position: absolute; right: 0; left: 0; bottom: 0; z-index: 1000;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="confirmLocation">Confirm Location</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+
+
+
+
+
+<!-- Modal for Successful Article Submission -->
+<div class="modal fade overflow-hidden" id="submissionSuccessModal" tabindex="-1" aria-labelledby="submissionSuccessModalLabel"  aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog">
+      <div class="modal-content" style="width: 320px;">
+        <div class="modal-header">
+          <h5 class="modal-title" id="submissionSuccessModalLabel">Article Submitted Successfully</h5>
+        </div>
+        <div class="modal-body">
+          <p>Your article has been successfully submitted!</p>
+        </div>
+        <div class="modal-footer">
+          <!-- Button to see the article -->
+          <a id="seeArticleBtn" href="" class="btn btn-success">See Article</a>
+          <!-- Button to go back to the dashboard -->
+          <a id="backToDashboardBtn" href="{% url 'articles:Add_Articles' %}" class="btn btn-secondary">Add New Article</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+{% endblock %}
+
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+{% comment %} <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script> {% endcomment %}
+<script src="{% static 'js/tinymce/tinymce.min.js'%}"></script>
+<script src="{% static 'js/articles.js' %}"></script>
+<!-- Leaflet.js and OpenStreetMap Integration -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    window.onload= function(){
+        const data = JSON.parse(localStorage.getItem("user"));
+        document.getElementById('email').value=data.email
+        author_name=`${data.first_name} ${data.last_name}`
+        document.getElementById('author_name').value=author_name
+
+        const token = localStorage.getItem("token");
+        const refresh = localStorage.getItem("refresh");
+
+    
+        // Check if token and user data are available
+        if (!token || !data) {
+          alert("You are not logged in");
+          window.location.href = "/users/login";
+          return;
+        }else{
+          setTokenRefreshTimer();
+        }
+        document.getElementById("username").innerText = data.username;
+        document.getElementById('userImg').src = data.profile.profile_picture ? data.profile.profile_picture : '{% static "images/default-profile.png" %}';
+        // Verify token with backend
+        // Role-based navigation control
+        const role = data.role;  // Get the user role from localStorage
+    
+        // Based on the user's role, modify the navbar
+        if (role === 'Journalist') {
+          // Hide User and Analytics links for journalists
+          document.querySelector("a[href='{% url 'articles:Users' %}']").parentElement.style.display = 'none';
+        } 
+        else if (role === 'Editor') {
+          // Editors can only access Articles and Dashboard
+          document.querySelector("a[href='{% url 'articles:Users' %}']").parentElement.style.display = 'none';
+        } 
+        else if (role === 'User') {
+          document.querySelector("a[href='{% url 'articles:Users' %}']").parentElement.style.display = 'none';
+          document.querySelector("a[href='{% url 'articles:Articles' %}']").parentElement.style.display = 'none';
+          document.getElementById('dashboard').style.display = 'none';
+        }
+    }
+    
+
+</script>
+
+{% endblock %}

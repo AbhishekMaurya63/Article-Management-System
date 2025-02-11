@@ -1,0 +1,113 @@
+{%load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    {% load django_bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <link rel="stylesheet" href="{% static 'css/stylesreg.css'  %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container">
+
+       <div class="row formRow" id="formRow">
+        <div class="col-sm-6 user" id="user">
+            <i class="fas fa-user" id="userlogo"></i>
+        </div>
+        <div class="col-sm-6 userForm gap-2" id="regForm">
+            <div class="row w-100 d-flex justify-content-start regbtn justify-content-center justify-content-md-start">
+                <a href="{% url 'index' %}" class="text-decoration-none" style="width: fit-content;">
+                    <button class="btn" style="width: 200px;">Back to Home Page</button>
+                </a>
+            </div>
+            
+
+        <form class="row" id="RegisterForm" onsubmit="return validate(event)" action="/">
+            <table class="table">
+            <tr>
+                <td colspan="2" class="text-center wback" ><h1>Welcome Back</h1></td>
+            </tr>
+            <tr>
+                <td colspan="2" class="text-center"><h1>Login Here</h1></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="font-size: 15px; text-align:center;"><span id="formErr" style="color: red;"></span></td>
+            </tr>
+            <tr>
+                <td class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" id="userName" name="username" maxlength='30' class="form-control" style="color: blueviolet;" placeholder="User Name">
+                    <div id="usernameErr" class="text-danger err"></div>
+                </td>
+            </tr>
+            <tr>
+                <td class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="inp" id="inp">
+                        <input type="password" id="password" name="password" maxlength='30' class="form-control pass" style="color: blueviolet;" placeholder="Password">
+                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('password', this)">
+                            <i class="fas fa-eye" id="eye-password" style="color: blueviolet; width:30px"></i>
+                        </button>
+                    </div>
+                    <div id="passwordErr" class="text-danger err"></div>
+                </td>
+            </tr>
+            <tr>
+                <td class="d-flex justify-content-between">
+                    <span>
+                    <input type="checkbox" name="remember_me" id="rememberMe" style="border: 1px solid blueviolet;">
+                    <label for="remember_me" style="color: blueviolet;">Remember Me</label>
+                </span>
+                    <a href="{% url 'users:Forget_password' %}" style="color: blueviolet;">Forget Password</a>
+                </td>
+            </tr>
+                    <tr>
+                    <td class="regbtn">
+                        <button type="submit" class="btn" id='submit-button'>
+                            <span id="loader" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display:none;"></span> 
+                            Login</button> 
+                        </td>
+            </tr>
+            
+            <tr>
+            <td class="text-center">Not Registerd?<a href="{%url 'users:register' %}" style="color: blueviolet;">  Click Here</a></td>
+        </tr>
+        </table>
+            
+        </form>
+    </div>
+       </div>
+    </div>
+
+         <!-- Modal for Success Message -->
+         <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog">
+                <div class="modal-content shadow-lg rounded-lg border-0">
+                    <div class="modal-header border-0 pb-3">
+                        <h5 class="modal-title position-relative d-inline-block" id="successModalLabel">
+                            <i class="fas fa-check-circle fa-2x mt-4" style="animation: pulse 1s infinite;"></i> 
+                            <div class='mt-4'>Login Successful<div>
+                        </h5>
+                    </div>
+                    <div class="modal-body text-center py-4" id='msg'>
+                        <p class="h5 text-muted">You're logged in successfully!</p>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center">
+                        <a href="{% url 'articles:Dashboard' %}">
+                            <button type="button" class="btn btn-primary rounded-pill shadow-sm" data-bs-dismiss="modal">
+                                Go to Dashboard
+                            </button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+
+    <script src="{%static 'js/login.js'%}"></script>
+  </body>
+</html>

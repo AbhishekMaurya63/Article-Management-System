@@ -1,0 +1,369 @@
+:root{
+    --primary-color:#3b0a61;
+    --background-color:#fff;
+    --text-color:#fff;
+    --border-color: #3b0a617a;
+}
+.tox-statusbar,.tox-promotion{
+    display: none !important;
+}
+*{
+    font-size: 1.1rem;
+  }
+.main-container{
+    margin-left: 0;
+    padding: 20px;
+    padding-top: 40px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 100px; /* Ensures the content takes up full height */
+    overflow-y: auto; 
+    display: flex;
+    justify-content: center;
+}
+.main-container::-webkit-scrollbar{
+    display: none;
+}
+.article_container{
+    margin-left: 0;
+    padding: 20px;
+    padding-top: 40px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 100px; /* Ensures the content takes up full height */
+    overflow-y: auto; /* Enables vertical scrolling */
+    /* min-height: 100vh;  */
+}
+.article_container::-webkit-scrollbar{
+    display: none;
+}
+
+.formcard{
+    border: 1px solid var(--border-color);
+    color: var(--primary-color);
+}
+.form-control{
+    border: 1px solid var(--border-color);
+}
+.form-control:focus{
+    border: 1px solid var(--border-color);
+    box-shadow: none;
+    color: var(--primary-color);
+    coret-color:var(--border-color);
+
+}
+.form-control::placeholder{
+    color: var(--border-color);
+}
+.err{
+    color: red;
+}
+#word-count {
+    position: relative;
+    bottom: 0px;
+    right: 0px;
+    font-size: 14px;
+    color: #555;
+}
+.ql-toolbar.ql-snow{
+    border-radius: 10px;
+    border: 1px solid var(--border-color) !important;
+    color: #3b0a61;
+}
+#editor-container{
+    border-radius: 10px;
+    width: 100%;
+    color: var(--primary-color);
+}
+.ql-editor{
+    min-height: 400px;
+}
+/* .ql-toolbar .ql-picker {
+    font-size: 16px;
+    color: #007bff;
+} */
+.ql-picker.ql-color {
+    background-color: #FF0 !important; /* Yellow highlighter */
+}
+
+
+/* Basic styling for tags */
+#tags-list {
+    margin-top: 10px;
+}
+
+.tag {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    margin: 5px;
+    border-radius: 3px;
+}
+
+.cut-btn {
+    margin-left: 5px;
+    background: none;
+    border: none;
+    color: red;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* Styling for suggestions */
+#tags-suggestions {
+    margin-top: 5px;
+}
+
+.suggestion {
+    padding: 5px;
+    background-color: #f5f5f5;
+    margin: 5px 0;
+    cursor: pointer;
+}
+
+.suggestion:hover {
+    background-color: #d3d3d3;
+}
+
+#tags-error {
+    font-size: 12px;
+    color: red;
+}
+/* Basic styling for predefined tags */
+#predefined-tags-container {
+    margin-bottom: 10px;
+}
+
+.predefined-tag {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #e0e0e0;
+    margin: 5px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.predefined-tag:hover {
+    background-color: #d3d3d3;
+}
+
+/* Style the input field to make it look nice */
+#publish_date {
+    width: 100%;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+/* Hover effect for the input */
+#publish_date:hover {
+    border-color: #007bff;
+    background-color: #f1faff;
+}
+
+/* Focus effect for the input */
+#publish_date:focus {
+    border-color: #007bff;
+    background-color: #ffffff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+    outline: none;
+}
+
+
+/* article pege css */
+.table-responsive {
+    position: relative;
+    border: 1px solid var(--border-color);
+  }
+  
+  .table-responsive thead {
+    position: sticky;
+    margin-top: 0;
+    top: 0; /* Ensure the header stays on top */
+    background-color: #f8f9fa; /* Same as your table-light */
+  }
+  .table-responsive thead {
+    margin-top: 0;
+}
+.table-responsive thead th{
+      color: var(--primary-color);
+
+  }
+  
+  .table-responsive tbody {
+    overflow-y: auto;
+  }
+  .table-responsive tbody tr:hover{
+    background: #fff;
+  }
+  .table-responsive tbody td {
+    max-width: 200px;  /* Set the max width for each td */
+    white-space: nowrap;  /* Prevent text from wrapping to the next line */
+    overflow: hidden;  /* Hide overflow content */
+    text-overflow: ellipsis;  /* Add ellipsis when text is cut off */
+  }
+
+  /* Specific width for columns if needed */
+  .table-responsive tbody td:nth-child(2),  /* Title column */
+  .table-responsive tbody td:nth-child(3),  /* Status column */
+  .table-responsive tbody td:nth-child(4),  /* Author column */
+  .table-responsive tbody td:nth-child(5),  /* Category column */
+  .table-responsive tbody td:nth-child(6)   /* Published date column */
+  {
+    max-width: 150px;  /* Set a maximum width for columns */
+  }
+
+  /* Styling for Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+    list-style-type: none;
+}
+
+.pagination .page-item {
+    margin: 0 5px;
+}
+
+.pagination .page-link {
+    padding: 8px 16px;
+    background-color: var(--background-color);
+    color: var(--primary-color) ;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.pagination .page-link:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.pagination .page-item.disabled .page-link {
+    background-color: var(--background-color);
+    color: #6c757d;
+    border-color: #ddd;
+    pointer-events: none;
+}
+
+.pagination .page-link:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5);
+}
+
+/* Adding spacing between the First/Last and page numbers */
+.pagination .page-item:not(:first-child):not(:last-child) .page-link {
+    margin: 0 3px;
+}
+
+/* Styling for small screens */
+@media (max-width: 576px) {
+    .pagination .page-link {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}
+
+
+
+
+/* show article css */
+
+/* articles.css */
+.card-header{
+    background-color: var(--primary-color);
+}
+.article-details {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.article-details h2 {
+    color: #007bff;
+    font-size: 20px;
+}
+
+.article-details .badge-info {
+    background-color: #17a2b8;
+    color: #fff;
+    font-size: 14px;
+}
+
+.article-details .mb-3 {
+    margin-bottom: 1rem;
+}
+
+.article-details p {
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.article-details .d-flex {
+    margin-bottom: 1rem;
+}
+.card {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.card-header h2 {
+    margin: 0;
+}
+
+.card-body p {
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+#article-image {
+    max-width: 100%;
+    border: 1px solid #ddd;
+    padding: 5px;
+    border-radius: 5px;
+    height: 300px;
+    object-fit: cover;
+}
+/* Make sure the buttons are aligned correctly */
+.row.mb-4 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  #back-button {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  #edit-button {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  /* Optional: Add a hover effect on the buttons */
+  #back-button:hover {
+    background-color: #5a6268;
+  }
+  
+  #edit-button:hover {
+    background-color: #007bff;
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
+  }
+  

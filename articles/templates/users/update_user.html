@@ -1,0 +1,345 @@
+{% extends "DashBoard/nav.html" %}
+{% load static %}
+{% block title %}Update User Profile{% endblock %}
+{% block style %}
+<link href="{% static 'css/users.css' %}" rel="stylesheet">
+<style>
+  .user-profile {
+    margin-top: 30px;
+  }
+  .profile-header {
+    background-color: #ffffff;
+    padding: 30px;
+    text-align: center;
+    border-radius: 12px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+  }
+  .profile-header img {
+    max-width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 20px;
+    border: 4px solid #007bff;
+  }
+  .profile-header h3 {
+    margin: 10px 0;
+    font-weight: bold;
+    color: #333;
+  }
+  .profile-header p {
+    font-size: 16px;
+    color: #6c757d;
+    margin: 5px 0;
+  }
+
+  .profile-details {
+    background-color: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .profile-details .row {
+    margin-bottom: 15px;
+  }
+
+  .profile-details label {
+    font-weight: bold;
+    color: #007bff;
+  }
+
+  .profile-details .value {
+    color: #495057;
+    font-size: 16px;
+  }
+
+  .profile-details .row .col-md-3 {
+    font-size: 14px;
+    color: #495057;
+  }
+
+  .profile-details .row .col-md-9 {
+    font-size: 16px;
+    color: #6c757d;
+    font-style: italic;
+  }
+
+  .active-status {
+    color: #28a745;
+    font-weight: bold;
+  }
+
+  .inactive-status {
+    color: #dc3545;
+    font-weight: bold;
+  }
+
+  .form-control {
+    border-radius: 8px;
+    padding: 10px;
+  }
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .update-btn {
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 16px;
+  }
+
+  .update-btn:hover {
+    background-color: #0056b3;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-container w-100">
+  <div class="container user-profile">
+    <div class="row mb-4">
+      <!-- Back Button (Top Left) -->
+      <div class="col-6">
+        <button class="btn btn-secondary" id="back-button">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+      </div>
+      
+      <!-- Edit Button (Top Right) -->
+      <div class="col-6 text-end" id='editBtn'>
+        <a href='/articles/user_updates/{{id}}/'>
+          <button class="btn btn-primary" id="edit-button">
+            <i class="fas fa-eye"></i> Show
+          </button>
+        </a>
+      </div>
+    </div>
+
+    <div class="profile-header">
+      <img id="profile-picture" src="{% static 'images/default-profile.png' %}" alt="Profile Picture">
+      <h3 id="user_username">Loading...</h3>
+      <p id="userroleandname">Loading...</p>
+      <p id="date-joined">Joined: Loading...</p>
+    </div>
+
+    <form id="update-profile-form" class="profile-details">
+      {% csrf_token %}
+      <div class="row">
+        <div class="col-md-3">
+          <label for="bio">Bio:</label>
+        </div>
+        <div class="col-md-9">
+          <textarea class="form-control" id="bio" name="bio" rows="4" placeholder="Enter Bio"></textarea>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-3">
+          <label for="contact_info">Contact Info:</label>
+        </div>
+        <div class="col-md-9">
+          <textarea class="form-control" id="contact_info" name="contact_info" rows="4" placeholder="Enter Contact Info"></textarea>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-3">
+          <label for="fname">First Name:</label>
+        </div>
+        <div class="col-md-9">
+          <input type="text" class="form-control" id="fname" name="fname" placeholder="Enter First Name">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-3">
+          <label for="lname">Last Name:</label>
+        </div>
+        <div class="col-md-9">
+          <input type="text" class="form-control" id="lname" name="lname" placeholder="Enter Last Name">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-3">
+          <label for="email">Email:</label>
+        </div>
+        <div class="col-md-9">
+          <input type="email" class="form-control" id="email" name="email" placeholder="Enter Email">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-3">
+          <label for="profile_picture">Profile Picture:</label>
+        </div>
+        <div class="col-md-9">
+          <input type="file" class="form-control" id="profile_picture" name="profile_picture">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-3">
+          <label for="is_active">Status:</label>
+        </div>
+        <div class="col-md-9">
+          <select class="form-control" id="is_active" name="is_active">
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-3">
+          <label for="is_active">Role:</label>
+        </div>
+        <div class="col-md-9">
+          <select class="form-control" id="role" name="role">
+            <option value="Journalist">Journalist</option>
+            <option value="Editor">Editor</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="update-btn">Update Profile</button>
+    </form>
+  </div>
+</div>
+
+
+<!-- Modal for Successful Article Submission -->
+<div class="modal fade" id="submissionSuccessModal" tabindex="-1" aria-labelledby="submissionSuccessModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="submissionSuccessModalLabel">User Updated Successfully</h5>
+      </div>
+      <div class="modal-body">
+        <p>User has been successfully Updated!</p>
+      </div>
+      <div class="modal-footer">
+        <!-- Button to see the article -->
+        <a id="seeUserBtn" href="" class="btn btn-success">See User</a>
+        <!-- Button to go back to the dashboard -->
+        <a id="backToDashboardBtn" href="/articles/dashboard/" class="btn btn-secondary">Back to Dashboard</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+  const userId = {{id}};
+  
+  document.addEventListener("DOMContentLoaded", function() {
+    const data = JSON.parse(localStorage.getItem("user"));
+        // Role-based navigation control
+        const role = data.role;  // Get the user role from localStorage
+        // Based on the user's role, modify the navbar
+        if (role === 'Journalist' || role === 'Editor') {
+          alert(`${role} Don't have permissions to see this page`)
+          window.history.back();
+        } ;
+    const token = localStorage.getItem('token');  // Get token from localStorage
+
+    // Fetch user data to populate fields
+    const apiUrl = `/api/detail/${userId}/`;
+
+    fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data) {
+        document.getElementById('profile-picture').src = data.profile.profile_picture || '{% static "images/default-profile.png" %}';
+        document.getElementById('user_username').textContent = data.username;
+        document.getElementById('userroleandname').textContent = `${data.first_name} ${data.last_name} (${data.role})`;
+        document.getElementById('date-joined').textContent = `Joined: ${new Date(data.date_joined).toLocaleDateString()}`;
+        document.getElementById('bio').value = data.profile.bio || '';
+        document.getElementById('contact_info').value = data.profile.contact_info || '';
+        document.getElementById('email').value = data.email || '';
+        document.getElementById('is_active').value = data.is_active ? 'true' : 'false';
+        document.getElementById('fname').value = data.first_name;
+        document.getElementById('lname').value = data.last_name;
+        document.getElementById('role').value = data.role;
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching user data:', error);
+      alert('Failed to load user details.');
+    });
+
+    // Handle form submission
+    document.getElementById('update-profile-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const updatedData = {
+        first_name: document.getElementById('fname').value,
+        last_name: document.getElementById('lname').value,
+        email: document.getElementById('email').value,
+        role: document.getElementById('role').value,
+        profile: {
+          bio: document.getElementById('bio').value,
+          contact_info: document.getElementById('contact_info').value,
+          profile_picture: document.getElementById('profile_picture').files[0]  // Handle file input
+        }
+      };
+
+      const formData = new FormData();
+
+      // Append profile fields
+      for (const key in updatedData.profile) {
+        if (updatedData.profile[key]) {
+          formData.append(`profile.${key}`, updatedData.profile[key]);
+        }
+      }
+
+      // Append other user details
+      formData.append('first_name', updatedData.first_name);
+      formData.append('last_name', updatedData.last_name);
+      formData.append('email', updatedData.email);
+      formData.append('role',updatedData.role);
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      // Send PUT request
+      fetch(`/api/update/${userId}/`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-CSRFToken': csrfToken,
+        },
+        body: formData,
+      })
+      .then(response => response.json())
+      .then(data => {
+
+        if (data.status === 'Success') {
+                    console.log(data)
+                    const modal = new bootstrap.Modal(document.getElementById('submissionSuccessModal'));
+                    modal.show();
+          document.getElementById('seeUserBtn').href = `/articles/user_details/${userId}/`;  // Redirect after success
+        } else {
+          alert('Error updating profile. Please try again.');
+        }
+      })
+      .catch(error => {
+        console.error('Error updating profile:', error);
+        alert('An error occurred. Please try again later.');
+      });
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "DashBoard/nav.html" %}
+{% load static %}
+{% block title %}User Profile{% endblock %}
+{% block style %}
+<link href="{% static 'css/users.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="main-container w-100">
+<div class="container user-profile">
+  <div class="row mb-4">
+    <!-- Back Button (Top Left) -->
+    <div class="col-6">
+       <button class="btn btn-secondary" id="back-button">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+    </div>
+    
+    <!-- Edit Button (Top Right) -->
+    <div class="col-6 text-end">
+        <a href='#' id='edit-Btn'>
+      <button class="btn btn-primary" id="edit-button">
+        <i class="fas fa-edit"></i> Edit
+      </button>
+    </a>
+    <a href='#' id='changePass-Btn'>
+      <button class="btn btn-primary" id="changePass-button">
+        <i class="fa-solid fa-key"></i> change Password
+      </button>
+    </a>
+    </div>
+  </div>
+
+  <div class="profile-header">
+    <img id="profile-picture" src="{% static 'images/default-profile.png' %}" alt="Profile Picture">
+    <h3 id="user_username">Loading...</h3>
+    <p id="userroleandname">Loading...</p>
+    <p id="date-joined">Loading...</p>
+  </div> 
+
+  <div class="profile-details">
+    <div class="row">
+      <div class="col-md-3">
+        <label for="bio">Bio:</label>
+      </div>
+      <div class="col-md-9">
+        <p class="value" id="bio">Loading...</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-3">
+        <label for="contact_info">Contact Info:</label>
+      </div>
+      <div class="col-md-9">
+        <p class="value" id="contact_info">Loading...</p>
+      </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+          <label for="email_info">Email Id:</label>
+        </div>
+        <div class="col-md-9">
+          <p class="value" id="email_info">Loading...</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <p class='p-5' id="active">Loading...</p>
+        </div>
+      </div>
+  </div>
+</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // Get the user ID from the URL
+    const data= JSON.parse(localStorage.getItem("user"));
+    userId=data.id
+    document.getElementById('edit-Btn').href=`/articles/profile/update/`
+    document.getElementById('changePass-Btn').href=`/articles/change_password/${userId}/`
+
+    // Fetch the user data from the API
+    const apiUrl = `/api/detail/${userId}/`;
+    const token = localStorage.getItem('token');  // Assuming the token is stored in localStorage
+
+    fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data)
+      // Populate the page with user data
+      if (data) {
+        document.getElementById('profile-picture').src = data.profile.profile_picture ? data.profile.profile_picture : '{% static "images/default-profile.png" %}';
+        document.getElementById('user_username').innerText=data.username;
+        document.getElementById('userroleandname').textContent =`${data.first_name } ${data.last_name} \(${data.role}\)`;
+        document.getElementById('date-joined').textContent = new Date(data.date_joined).toLocaleDateString();
+        document.getElementById('email_info').innerText=data.email;
+        // Display Bio and Contact Info, defaulting if null
+        document.getElementById('bio').textContent = data.profile.bio || 'N/A';
+        document.getElementById('contact_info').textContent = data.profile.contact_info || 'N/A';
+        document.getElementById('active').innerText=data.is_active?"Active":"Unactive"
+        const active=document.getElementById('active');
+    active.innerText=="Active" ? active.style.color="green":active.style.color="red"
+        
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching user data:', error);
+      alert('Failed to load user details.');
+    });
+  });
+</script>
+{% endblock %}

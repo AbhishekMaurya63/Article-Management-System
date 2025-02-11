@@ -1,0 +1,402 @@
+{% extends "DashBoard/nav.html" %}
+{% load static %}
+{% block title %}Article Details{% endblock %}
+{% block style %}
+<link href="{% static 'css/articles.css' %}" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+
+  /* Card container styling */
+.card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Card hover effect */
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Image styling */
+.card-img-top {
+    border-radius: 8px 8px 0 0; /* Rounded top corners */
+}
+
+/* Caption text styling */
+.caption-text {
+    font-size: 20px;
+    color: #fff; /* Gray color for captions */
+    text-align: center;
+    display: block;
+    margin-top: 10px;
+    max-height: 60px;
+    overflow: hidden; 
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Card body styling */
+.card-body {
+    padding: 15px;
+    background-color: #f8f9fa;
+}
+
+/* Optional: Padding for columns */
+.col-md-4 {
+    padding: 10px;
+}
+.location-details-container {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+.location-title {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.location-text {
+    font-size: 1em;
+    color: #555;
+}
+
+.location-text strong {
+    color: #333;
+}
+
+
+</style>
+{% endblock %}
+{% block content %}
+<div class="main-container w-100 pb-5 mb-5">
+    <div class="container mt-4 m-auto">
+      <div class="row mb-4">
+        <!-- Back Button (Top Left) -->
+        <div class="col-6">
+           <button class="btn btn-secondary" id="back-button">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+        </div>
+        
+        <!-- Edit Button (Top Right) -->
+        <div class="col-6 text-end" id='editBtn'>
+            <a href='/articles/update_article/{{id}}/'>
+          <button class="btn btn-primary" id="edit-button">
+            <i class="fas fa-edit"></i>
+          </button>
+        </a>
+        </div>
+      </div>
+  
+      <div class="card shadow">
+        <!-- Article Header Section -->
+        <div class="card-header text-center text-white">
+          <h2 id="article-title">Loading...</h2>
+          <small id="article-category" class="badge bg-light text-dark"></small>
+        </div>
+  
+        <!-- Article Content Section -->
+        <div class="card-body">
+          <!-- Article Image -->
+          <div id="article-image-container" class="text-center mb-3" style="display: none;">
+            <img id="article-image" src="" alt="Article Image" class="img-fluid rounded" style="width: 100%">
+          </div>
+  
+          <!-- Author and Publish Info -->
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <p><strong>Author:</strong> <span id="article-author"></span></p>
+            </div>
+            <div class="col-md-6 text-end">
+              <p><strong>Publish Date:</strong> <span id="article-publish-date"></span></p>
+            </div>
+          </div>
+  
+          <!-- Article Content -->
+          <div class="mb-4">
+            <h4>Content:</h4>
+            <p id="article-content"></p>
+          </div>
+          <div id="location-details" class="mt-4">
+        </div>
+          <div class="mt-4">
+            <h4>Location</h4>
+            <div id="map" style="height: 400px; width: 100%; border-radius: 10px;" class="map"> Location Not available</div>
+          </div>
+         
+
+          <div class="mt-4">
+            <h4>Image Gallery:</h4>
+            <div id="imageGallery" class="row">
+                         No Image available
+              <!-- Dynamically populated image gallery -->
+            </div>
+          </div>
+  
+          <!-- Additional Information -->
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Status:</strong> 
+                <span id="article-status" class="badge bg-success"></span>
+              </p>
+              <div id="statusdrp" class="flex-row gap-2">
+              <select id="status-dropdown" class="form-select w-50">
+                <option value="review">Under Review</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="published">Published</option>
+              </select>
+              <button id="save-status-button" class="btn btn-primary btn-sm">Save Status</button>
+            </div>
+            </div>
+            <div class="col-md-6 text-end">
+              <p><strong>Email:</strong> <span id="article-email"></span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+{% block script %}
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    async function fetchArticle(id) {
+        const apiUrl = `/api/articles/${id}/`;  // Your API endpoint
+        const token = localStorage.getItem('token');  // Assuming token is stored in localStorage
+        const role=JSON.parse(localStorage.getItem('user')).role;
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,  // Include the token in the header
+                    'Content-Type': 'application/json', // Ensure JSON content type
+                }
+            });
+
+            const data = await response.json();
+            console.log(data)
+            if (response.ok) {
+    // Populate the HTML with the fetched article data
+    document.getElementById('article-title').textContent = data.title;
+    document.getElementById('article-status').textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+    const statusdiv=document.getElementById('status-dropdown');
+    if (data.status === 'published' && role === 'Editor') {
+    statusdiv.setAttribute('disabled', 'true');
+    document.getElementById('save-status-button').setAttribute('disabled', 'true');
+}
+    document.getElementById('status-dropdown').value = data.status;
+    document.getElementById('article-author').textContent = data.author_name;
+    document.getElementById('article-category').textContent = data.category;
+    document.getElementById('article-publish-date').textContent = data.publish_date;
+    document.getElementById('article-content').innerHTML = data.content;
+    document.getElementById('article-email').textContent = data.email;
+    if(data.city){
+    let locationString = data.city;
+
+let locationParts = locationString.split(',');
+
+// Assuming the format is "City, State, Country"
+let city = locationParts[0].trim();
+let state = locationParts[1]?.trim();  // The `?.` operator handles cases where state might be undefined
+let country = locationParts[2]?.trim();
+    document.getElementById('location-details').innerHTML = `
+    <div class="location-details-container mt-4">
+        <h4 class="location-title">Location Details</h4>
+        <p class="location-text">
+            <strong>City:</strong> ${city || 'Not available'}<br>
+            <strong>State:</strong> ${state || 'Not available'}<br>
+            <strong>Country:</strong> ${country || 'Not available'}
+        </p>
+    </div>
+`;
+    fetchImageGallery(data.id, token);
+    if (data.latitude && data.longitude) {
+                initializeMap(data.latitude, data.longitude);
+    }
+    else{
+      document.getElementById('map').style.display='none'
+    }
+  }
+    // Get user info from localStorage
+    const user = JSON.parse(localStorage.getItem("user"));
+    const userRole = user ? user.role : '';  // Ensure user object exists in localStorage
+    
+      
+    // Check the user role and article status to hide the Edit button if needed
+    if (userRole === 'Journalist' && (data.status === 'approved' || data.status === 'published')) {
+      const editBtn = document.getElementById('editBtn');
+      if (editBtn) {
+        editBtn.classList.add('d-none'); // Hide the edit button
+      } else {
+        console.error("Edit button not found.");
+      }
+    }
+    if (userRole === 'Editor' &&  data.status === 'published') {
+      const editBtn = document.getElementById('editBtn');
+      if (editBtn) {
+        editBtn.classList.add('d-none'); // Hide the edit button
+      } else {
+        console.error("Edit button not found.");
+      }
+    }
+    if(userRole==='Journalist'){
+      document.getElementById('statusdrp').style.display='none'
+    }
+    else{
+      document.getElementById('statusdrp').style.display='flex'
+    }
+
+    // Display the article image if it exists
+    if (data.image) {
+      const imageContainer = document.getElementById('article-image-container');
+      const imageElement = document.getElementById('article-image');
+      imageElement.src = data.image;
+      imageContainer.style.display = 'block';  // Show the image container
+    }
+
+  } else {
+    console.error('Error fetching article:', data);
+    // Handle any error (e.g., article not found)
+    document.querySelector('.card').innerHTML = `<p class="text-center text-danger">Article not found.</p>`;
+  }
+} catch (error) {
+  console.error('Error:', error);
+  document.querySelector('.card').innerHTML = `<p class="text-center text-danger">Error loading article. Please try again later.</p>`;
+}
+    }
+
+
+    async function fetchImageGallery(articleId, token) {
+      const apiUrl = `/api/article-images/?article=${articleId}`; // Add the article ID as a query parameter
+      const imageGallery = document.getElementById("imageGallery");
+      imageGallery.innerHTML = '<p class="text-muted">Loading images...</p>';
+      
+      try {
+          const response = await fetch(apiUrl, {
+              method: "GET",
+              headers: {
+                  'Authorization': `Bearer ${token}`, // Include your token for authentication
+                  'Content-Type': 'application/json',
+              },
+          });
+  
+          if (response.ok) {
+              const result = await response.json();
+              const images = result.results;
+              console.log("Images fetched successfully:", result);
+  
+              // Check if images exist
+              if (images && images.length > 0) {
+                  imageGallery.innerHTML = images.map(image => `
+                      <div class="col-md-4">
+    <div class="card shadow-sm mb-4" >
+        <img src="${image.image}" class="card-img-top" alt="${image.caption || 'Article Image'}" style="height: 200px; object-fit: cover;">
+        <div class="card-body" style="background-color: blueviolet; ">
+            <p class="card-text">
+                <span id="caption-${image.id}" class="caption-text">${image.caption || 'No caption available'}</span>
+            </p>
+        </div>
+    </div>
+</div>
+                  `).join('');
+              } else {
+                  imageGallery.innerHTML = '<p>No images available for this article.</p>';
+              }
+          } else {
+              console.error("Error fetching images:", await response.text());
+              imageGallery.innerHTML = '<p class="text-danger">Failed to load images.</p>';
+          }
+      } catch (error) {
+          console.error("Network error:", error);
+          imageGallery.innerHTML = '<p class="text-danger">Error loading images.</p>';
+      }
+  }
+
+  function initializeMap(latitude, longitude) {
+    // Initialize the map and set its view to the provided latitude and longitude
+    const map = L.map('map').setView([latitude, longitude], 13); // 13 is the zoom level
+
+    // Add OpenStreetMap tile layer to the map
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Add a marker to the map at the specified latitude and longitude
+    L.marker([latitude, longitude]).addTo(map)
+        .bindPopup('<b>Location</b><br>Latitude: ' + latitude + '<br>Longitude: ' + longitude)
+        .openPopup();
+}
+
+
+
+  
+
+    // Call the fetchArticle function with the article ID from the URL
+    const articleId = {{ id }};  // Django template variable for the article ID
+    document.addEventListener('DOMContentLoaded', function () {
+        fetchArticle(articleId);  // Fetch and display the article data when the page loads
+        
+    });
+
+    document.getElementById('save-status-button').addEventListener('click',async ()=>{
+      let newStatus = document.getElementById('status-dropdown').value;
+      if (newStatus=='approved'){
+        newStatus="approve"
+      }
+      if (newStatus=='published'){newStatus='publish'}
+      if (newStatus=='rejected'){newStatus='reject'}
+    // Send a request to update the status on the server
+      const apiUrl = `/api/articles/${articleId}/${newStatus}/`;  // Your API endpoint
+      const token = localStorage.getItem('token');
+      try {
+            const response = await fetch(apiUrl, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`,  // Include the token in the header
+                    'Content-Type': 'application/json', // Ensure JSON content type
+                }
+            });
+
+            const data = await response.json();
+        if (response.ok){
+        alert('Status updated successfully!');
+        // Optionally update the UI
+        const articleStatusBadge = document.getElementById('article-status');
+        articleStatusBadge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+        articleStatusBadge.className = `badge ${getStatusBadgeClass(newStatus)}`;
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to update status: ${errorData.detail || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('An error occurred while updating the status.');
+    }
+  });
+    
+    function getStatusBadgeClass(status) {
+    switch (status) {
+      case 'approved':
+        return 'bg-success';
+      case 'reject':
+        return 'bg-danger';
+      case 'review':
+        return 'bg-warning';
+      case 'published':
+        return 'bg-info';
+      default:
+        return 'bg-secondary';
+    }
+  }
+</script>
+{% endblock %}
+{% endblock %}

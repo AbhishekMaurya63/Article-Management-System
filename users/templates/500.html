@@ -1,0 +1,49 @@
+<!-- templates/500.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internal Server Error</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .container {
+            text-align: center;
+            margin-top: 100px;
+        }
+        .container h1 {
+            font-size: 4rem;
+            color: #dc3545;
+        }
+        .container p {
+            font-size: 1.2rem;
+            margin-top: 20px;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Oops! Something Went Wrong</h1>
+        <p>We're sorry, but something went wrong on our end. Please try again later.</p>
+        <a href="/" class="btn">Go to Home</a>
+    </div>
+
+</body>
+</html>

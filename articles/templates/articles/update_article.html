@@ -1,0 +1,1322 @@
+{% extends "DashBoard/nav.html" %}
+{% load static %}
+{% block title %}Update Article{% endblock %}
+{% block style %}
+<link href="{% static 'css/articles.css' %}" rel="stylesheet">
+<!-- Include Quill's styles -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+ /* Modal Styling */
+#imageModal .modal-dialog {
+    max-width: 80vw;  /* Modal width */
+    margin: auto; /* Center the modal */
+    border-radius: 12px; /* Rounded corners for the modal */
+    transition: transform 0.3s ease-out; /* Smooth transition */
+}
+
+/* Modal Content */
+#imageModal .modal-content {
+    border-radius: 12px; /* Rounded corners */
+    background-color: blueviolet; /* White background */
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); /* Soft shadow */
+    border: none; /* Remove default border */
+    transition: transform 0.3s ease-out; /* Smooth animation on open */
+}
+
+/* Modal Header */
+#imageModal .modal-header {
+    background-color: blueviolet; /* Professional blue background */
+    color: #ffffff; /* White text */
+    padding: 15px 25px; /* Padding for header */
+    border-top-left-radius: 12px; /* Rounded top-left corner */
+    border-top-right-radius: 12px; /* Rounded top-right corner */
+    border-bottom: 1px solid #ddd; /* Subtle bottom border */
+}
+
+#imageModal .modal-header .btn-close {
+    background-color: transparent; /* Transparent background */
+    border: none; /* No border */
+    color: #ffffff; /* White color for the close button */
+    font-size: 1.5rem; /* Larger font for the close button */
+}
+
+/* Hover effect for close button */
+#imageModal .modal-header .btn-close:hover {
+    color: #dc3545; /* Red color on hover */
+}
+
+/* Modal Body */
+#imageModal .modal-body {
+    padding: 0; /* No padding to ensure the image fits perfectly */
+    position: relative;
+    overflow: hidden; /* Hide overflow */
+    /* background-color: #892be29d; Light grey background for the body */
+    background: linear-gradient(blueviolet,#d4c0e7);
+}
+
+#imageModal .modal-body img {
+    max-width: 100%;
+    height: 100%;
+    object-fit: contain; /* Ensure the image is not distorted */
+    border-radius: 8px; /* Slightly rounded corners for the image */
+}
+
+/* Smooth Fade-in Effect */
+#imageModal .modal.fade .modal-dialog {
+    opacity: 0;
+    transform: translateY(-50px);
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-out;
+}
+
+#imageModal .modal.fade.show .modal-dialog {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Backdrop Styling */
+.modal-backdrop.show {
+    opacity: 0.6; /* Darken the background overlay */
+    background-color: #000; /* Dark background */
+}
+
+/* Modal Close Button Position */
+#imageModal .modal-header .btn-close {
+    font-size: 1.5rem;
+    color: #fff;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}
+
+#imageModal .modal-header .btn-close:hover {
+    opacity: 1;
+    color: #ff6347; /* Slightly lighter red */
+}
+.caption-text {
+  display: block;
+  max-height: 60px; /* Set max height for the caption */
+  overflow: hidden; /* Hide overflowed text */
+  text-overflow: ellipsis; /* Add ellipsis for overflowed text */
+  white-space: nowrap; /* Prevent wrapping */
+}
+
+.card-body p {
+  height: auto; /* Ensure the height adjusts dynamically */
+}
+
+.card-body {
+  position: relative;
+  padding: 1rem;
+  min-height: 100px; /* Ensure the body doesn't collapse */
+}
+
+   /* Custom Scrollbar */
+   #imageGallery {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    /* Styling the scrollbar track */
+    #imageGallery::-webkit-scrollbar {
+        width: 8px; /* Width of the scrollbar */
+    }
+
+    #imageGallery::-webkit-scrollbar-track {
+        background: #f1f1f1; /* Light background for the track */
+        border-radius: 10px;
+    }
+
+    /* Styling the scrollbar thumb */
+    #imageGallery::-webkit-scrollbar-thumb {
+        background: #888; /* Darker thumb */
+        border-radius: 10px;
+    }
+
+    #imageGallery::-webkit-scrollbar-thumb:hover {
+        background: #555; /* Darker thumb on hover */
+    }
+
+    /* Optional: Adding a box shadow to the scrollbar */
+    #imageGallery::-webkit-scrollbar-thumb {
+        box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+    }
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    #imageModal .modal-dialog {
+        max-width: 100%; /* Full screen on smaller devices */
+        margin: 0; /* Remove margins */
+    }
+    #imageModal .modal-header {
+        font-size: 1.25rem; /* Smaller font size for smaller screens */
+        padding: 10px 15px; /* Adjust header padding */
+    }
+    #imageModal .modal-body img {
+        max-height: 80vh; /* Restrict the image height on small screens */
+    }
+}
+  
+</style>
+{% endblock %}
+{% block content %}
+<div class="main-container w-100 pb-5 mb-5">
+<div class="container mt-3 w-100">
+    <div class="row mb-4">
+        <!-- Back Button (Top Left) -->
+        <div class="col-6">
+           <button class="btn btn-secondary" id="back-button">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+        </div>
+        
+        <!-- Edit Button (Top Right) -->
+        <div class="col-6 text-end" id='editBtn'>
+            <a href='/articles/articles/{{id}}/'>
+          <button class="btn btn-primary" id="edit-button">
+            <i class="fas fa-eye"></i> Show
+          </button>
+        </a>
+        </div>
+      </div>
+    <div class="card p-4">
+        <h2 class="text-center mb-4">Update Article</h2>
+        <form id="update-article-form">
+            <!-- Title and Subtitle -->
+            <div class="mb-3">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" id="title" class="form-control" placeholder="Enter article title">
+                <div id="title-error" class="err"></div>
+
+            </div>
+            <div class="mb-3">
+                <label for="subtitle" class="form-label">Subtitle</label>
+                <input type="text" id="subtitle" class="form-control" placeholder="Enter article subtitle">
+                <div id="subtitle-error" class="err"></div>
+
+            </div>
+
+            <!-- Content (Using Quill Editor) -->
+            <div class="mb-3">
+                <label>Content</label>
+                <div id="content-container">
+                    <textarea id="editor-container"></textarea>
+                </div>
+                <div id="word-count">Words: 0</div><br>
+                <div id="content-error" class="err"></div>
+            </div>
+
+            <!-- Author Name and Email -->
+            <div class="mb-3">
+                <label for="author_name" class="form-label">Author Name</label>
+                <input type="text" id="author_name" class="form-control" placeholder="Enter your name" disabled>
+                <div id="author-error" class="err"></div>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" id="email" class="form-control" placeholder="Enter your email">
+                <div id="email-error" class="err"></div>
+            </div>
+            <!-- Category, Image, and Publish Date -->
+            <div class="mb-3">
+                <label for="category" class="form-label">Category</label>
+                <select id="category" class="form-select">
+                    <option value="">Select Category</option>
+                    <option value="news">News</option>
+                    <option value="opinion">Opinion</option>
+                    <option value="feature">Feature</option>
+                    <option value="technology">Technology</option>
+                    <option value="health">Health</option>
+                    <option value="business">Business</option>
+                    <option value="entertainment">Entertainment</option>
+                    <option value="politics">Politics</option>
+                    <option value="sports">Sports</option>
+                    <option value="lifestyle">Lifestyle</option>
+                    <option value="education">Education</option>
+                    <option value="environment">Environment</option>
+                    <option value="culture">Culture</option>
+                </select>
+                <div id="category-error" class="err"></div>
+            </div>
+
+            <div class="mb-3">
+                <label for="publish_date" class="form-label">Publish Date</label>
+                <input type="date" id="publish_date" class="form-control" placeholder="Select publish date "/>
+                <div id="publish_date-error" class="err"></div>
+            </div>
+            <div class="mb-3" id="status-container">
+                <label for="status" class="form-label">Status</label>
+                <select id="status" class="form-select">
+                    <option value="review">Under Review</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Reject</option>
+                    <option value="published">Published</option>
+                </select>
+            </div>
+
+             <!-- Image Upload -->
+            <div class="mb-3">
+                <label for="image" class="form-label">Article Image</label>
+                <input type="file" id="image" class="form-control" accept=".jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp,.heic,.heif,.ico,.psd,.avif">
+                <div id="image-error" class="err"></div>
+            </div> 
+            <div class="mb-3">
+            <div class="d-flex justify-content-between mb-3 row gap-2">
+                <button type="button" id="add-gallery-btn" class=" col-sm-2  btn btn-outline-primary text-center gap-2" onclick="openimagemodal()">
+                    <i class="fas fa-camera-retro"></i> Update Gallery
+                </button>
+                <button type="button" id="add-gallery-btn" class=" col-sm-2 btn btn-outline-primary text-center gap-2" onclick="openimageGallerymodal()">
+                    <i class="fas fa-images"></i> Show Gallery
+                </button>
+                <button type="button" id="add-location-btn" class="col-sm-2 btn btn-outline-secondary text-center gap-2" onclick="openmapmodal()">
+                    <i class="fas fa-map-marker-alt"></i> Add Location
+                </button>
+            </div>
+        </div>
+            <!-- Terms Agreement -->
+            <div class="mb-3">
+                <div class="form-check">
+                    <input type="checkbox" id="agree_to_terms" class="form-check-input" checked>
+                    <label for="agree_to_terms" class="form-check-label">I agree to the terms and conditions</label>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center">
+                <button type="button" id="submitbtn" class="btn  px-4">
+                    <span id="loader" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display:none;"></span> 
+                    Update Article</button>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+
+
+
+<!-- Modal for Adding Multiple Images with Captions -->
+<div class="modal fade" id="addImagesModal" style="overflow: hidden;" tabindex="-1" aria-labelledby="addImagesModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="width: 90vw; height: 80vh;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addImagesModalLabel">Add Images</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="imageUploadForm">
+                    <!-- Scrollable Wrapper -->
+                    <div style="max-height: 300px; overflow-y: auto;" id="scrollableImageWrapper">
+                        <div id="imageContainer" class="d-flex flex-wrap gap-3 justify-content-center">
+                            <!-- Initial Placeholder for Images -->
+                            <div id="addImageButton" class="add-image-placeholder">
+                                <button type="button" class="btn btn-light border d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;" onclick="triggerImageUpload()">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <input type="file" id="hiddenFileInput" style="display: none;" accept="image/*" onchange="handleImageUpload(this)" accept=".jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp,.heic,.heif,.ico,.psd,.avif">
+                            </div>
+                        </div>
+                    </div>
+                    <small class="text-danger mt-2 d-block" id="imageError"></small>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveImages">Save Images</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="imageGalleryModal" style="overflow: hidden;" tabindex="-1" aria-labelledby="imageGalleryModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content" style="width: 90vw; height: fit-content;">
+        <div class="modal-header">
+          <h5 class="modal-title" id="imageGalleryModalLabel">Article Image Gallery</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Gallery Container -->
+          <div id="imageGallery" style="max-height: 300px; overflow-y: auto;" class="row g-3">
+            <!-- Images will be dynamically loaded here -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+<!-- <div class="modal fade" id="locationModal" tabindex="-1" style="overflow: hidden;" aria-labelledby="locationModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false"> -->
+    <div class="modal fade" id="locationModal" style="overflow: hidden;" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="width: 90vw; height: 80vh; overflow: hidden; border-bottom: 20px solid #fff;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="locationModalLabel">Select Location</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input
+                            type="text"
+                            id="locationSearch"
+                            class="form-control mb-2"
+                            placeholder="Search location (e.g., village, street, postal code, country)"
+                        />
+                        <div class="row g-2">
+                            <div class="col">
+                                <input
+                                    type="text"
+                                    id="latitudeInput"
+                                    class="form-control"
+                                    placeholder="Enter Latitude"
+                                    disabled
+                                />
+                            </div>
+                            <div class="col">
+                                <input
+                                    type="text"
+                                    id="longitudeInput"
+                                    class="form-control"
+                                    placeholder="Enter Longitude"
+                                    disabled
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div id="mapContainer" style="width: 100%; height: 300px;"></div>
+                </div>
+                <div class="modal-footer" style="position: absolute; right: 0; left: 0; bottom: 0; z-index: 1000;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="confirmLocation">Confirm Location</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+<!-- Fullscreen Modal for Image -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-fullscreen">
+      <div class="modal-content w-75">
+        <div class="modal-header">
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <img id="modalImage" src="" alt="Full Image" class="img-fluid" style="width: 100%; height: 100%; object-fit: contain;">
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  
+  
+
+
+
+<!-- Modal for Successful Article Submission -->
+<div class="modal fade" id="submissionSuccessModal" tabindex="-1" aria-labelledby="submissionSuccessModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="submissionSuccessModalLabel">Article Updated Successfully</h5>
+        </div>
+        <div class="modal-body">
+          <p>Your article has been successfully Updated!</p>
+        </div>
+        <div class="modal-footer">
+          <!-- Button to see the article -->
+          <a id="seeArticleBtn" href="/articles/articles/{{id}}/" class="btn btn-success">See Article</a>
+          <!-- Button to go back to the dashboard -->
+          <a id="backToDashboardBtn" href="/articles/dashboard/" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+{% endblock %}
+
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="{% static 'js/tinymce/tinymce.min.js'%}"></script>
+<!-- Leaflet.js and OpenStreetMap Integration -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const userRole = JSON.parse(localStorage.getItem("user")).role;
+    // JavaScript to handle Quill Editor
+    // for content  
+
+// Initialize TinyMCE editor
+tinymce.init({
+    selector: '#editor-container',
+    plugins: 'lists link image code wordcount textcolor colorpicker textpattern',
+    toolbar: 'undo redo | blocks | bold italic underline | align | bullist numlist outdent indent | link image | forecolor backcolor | fontselect fontsizeselect | code',
+    placeholder: 'Write your article content here...',
+    setup: function (editor) {
+        editor.on('input', function () {
+            updateWordCount(editor);
+        });
+    }
+});
+
+
+// Count words in the editor
+const countWords = (text) => {
+    let words = text.trim().split(/\s+/);
+    return words.length;
+};
+const countCharacters = (text) => {
+    return text.length; // Count the length of the trimmed text, including spaces
+};
+const updateWordCount = (editor) => {
+    const content = editor.getContent({ format: 'text' }).trim(); // Get plain text content
+    const wordCount = countWords(content);
+    const characterCount = countCharacters(content);
+
+    document.getElementById('word-count').innerText = `Words: ${wordCount} || Characters: ${characterCount}`;
+};
+
+// You can add a simple validation before submitting the form
+const validateContent = () => {
+    const content = tinymce.get('editor-container').getContent({ format: 'text' }).trim();
+    if (content === '') {
+        document.getElementById('content-error').innerText = 'Content cannot be empty';
+        return false;
+    } else if (countCharacters(content) < 20) {
+        document.getElementById('content-error').innerText = 'It must be at least 10 characters';
+        return false;
+    }
+    return true;
+};
+
+    
+
+    
+</script>
+
+<script>
+    let uploadedImages = []; // Array to store image data and captions
+
+function openimagemodal() {
+    const modal = new bootstrap.Modal(document.getElementById('addImagesModal'));
+    modal.show();
+}
+function openimageGallerymodal() {
+    const modal = new bootstrap.Modal(document.getElementById('imageGalleryModal'));
+    modal.show();
+}
+
+function triggerImageUpload() {
+    document.getElementById("hiddenFileInput").click();
+}
+
+function handleImageUpload(input) {
+    const file = input.files[0];
+    const validExtensions = [
+        "image/jpeg",  
+        "image/png",   
+        "image/gif",   
+        "image/jpg",   
+        "image/bmp",   
+        "image/tiff",  
+        "image/webp", 
+        "image/heif",  
+        "image/ico", 
+        "image/psd",
+        "image/avif"
+      ];
+      
+
+    // Validation
+    if (file && validExtensions.includes(file.type)) {
+        const imageIndex = uploadedImages.length; // Get the current index for the image
+        uploadedImages.push({ file, caption: "" });
+
+        // Preview Image
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const imageWrapper = document.createElement("div");
+            imageWrapper.className = "image-preview-wrapper position-relative";
+            imageWrapper.style.width = "120px";
+            imageWrapper.style.margin = "10px";
+
+            // Image Preview
+            const imagePreview = document.createElement("div");
+            imagePreview.style.width = "100%";
+            imagePreview.style.height = "100px";
+            imagePreview.style.backgroundImage = `url(${e.target.result})`;
+            imagePreview.style.backgroundSize = "cover";
+            imagePreview.style.backgroundPosition = "center";
+            imagePreview.style.border = "1px solid #ddd";
+            imagePreview.style.borderRadius = "5px";
+
+            // Caption Input
+            const captionInput = document.createElement("input");
+            captionInput.type = "text";
+            captionInput.className = "form-control mt-2 captions";
+            captionInput.placeholder = "Enter caption";
+            captionInput.dataset.index = imageIndex; // Associate input with the correct image index
+            captionInput.oninput = function () {
+                const index = parseInt(this.dataset.index, 10); // Use dataset index
+                uploadedImages[index].caption = this.value;
+                document.getElementById("saveImages").disabled = false;
+                    document.getElementById("saveImages").innerText = "Save Changes";
+            };
+
+            // Delete Button
+            const deleteButton = document.createElement("button");
+            deleteButton.className = "btn btn-danger btn-sm position-absolute";
+            deleteButton.style.top = "5px";
+            deleteButton.style.right = "5px";
+            deleteButton.innerHTML = `<i class="fas fa-trash"></i>`;
+            deleteButton.onclick = function () {
+                const index = parseInt(captionInput.dataset.index, 10);
+                uploadedImages.splice(index, 1);
+                imageWrapper.remove();
+
+                // Reassign dataset indices after deletion
+                const allInputs = document.querySelectorAll(".image-preview-wrapper input");
+                allInputs.forEach((input, idx) => {
+                    input.dataset.index = idx;
+                });
+
+                // Re-enable Save Button if images exist
+                if (uploadedImages.length > 0) {
+                    document.getElementById("saveImages").disabled = false;
+                    document.getElementById("saveImages").innerText = "Save Changes";
+                }
+            };
+
+            imageWrapper.appendChild(imagePreview);
+            imageWrapper.appendChild(captionInput);
+            imageWrapper.appendChild(deleteButton);
+            document.getElementById("imageContainer").insertBefore(imageWrapper, document.getElementById("addImageButton"));
+        };
+        reader.readAsDataURL(file);
+
+        // Reset Input
+        input.value = "";
+        document.getElementById("imageError").textContent = "";
+
+        // Enable Save Button
+        document.getElementById("saveImages").disabled = false;
+        document.getElementById("saveImages").innerText = "Save Changes";
+    } else {
+        document.getElementById("imageError").textContent = "Invalid file type. Please upload an image.";
+    }
+}
+
+document.getElementById("saveImages").addEventListener("click", () => {
+    if (uploadedImages.length === 0) {
+        alert("Please upload at least one image.");
+    } else {
+        // alert("Images saved successfully!");
+        console.log("Uploaded Images:", uploadedImages); // Send this to your backend or process it as needed
+
+        // Disable Save Button and Update Text
+        document.getElementById("saveImages").innerText = "Saved Images";
+        document.getElementById("saveImages").disabled = true;
+
+        // Close the Modal
+        const modal = document.getElementById("addImagesModal");
+        if (modal) {
+            bootstrap.Modal.getInstance(modal).hide();
+        }
+    }
+});
+
+async function deleteImage(imageId) {
+  const apiUrl = `/api/article-images/${imageId}/`; // Endpoint for deleting the image
+  const token = localStorage.getItem('token');
+
+  if (confirm("Are you sure you want to delete this image?")) {
+    try {
+      const response = await fetch(apiUrl, {
+        method: "DELETE",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        alert("Image deleted successfully.");
+        document.querySelector(`#caption-${imageId}`).closest(".col-md-4").remove();
+      } else {
+        console.error("Error deleting image:", await response.text());
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+    }
+  }
+}
+
+function editCaption(imageId) {
+  const captionElement = document.getElementById(`caption-${imageId}`);
+  const currentCaption = captionElement.innerText;
+  document.getElementById('editbtn').style.display='none'
+  // Create an input field with the current caption as the value
+  const inputField = document.createElement('input');
+  inputField.type = 'text';
+  inputField.value = currentCaption;
+  inputField.classList.add('form-control', 'form-control-sm');
+  
+  // Replace the caption with the input field
+  captionElement.innerHTML = '';
+  captionElement.appendChild(inputField);
+  
+  // Show the update button and hide the edit button
+  document.querySelector(`#update-btn-${imageId}`).style.display = 'inline-block';
+  document.querySelector(`#edit-btn-${imageId}`).style.display = 'none';
+}
+
+function updateCaption(imageId) {
+  const captionElement = document.getElementById(`caption-${imageId}`);
+  const newCaption = captionElement.querySelector('input').value;  // Get the value from the input field
+
+  if (newCaption !== "") {
+    const apiUrl = `/api/article-images/${imageId}/`; // Endpoint for updating the caption
+    const token = localStorage.getItem('token'); // Get the token
+
+    fetch(apiUrl, {
+      method: "PATCH",
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ caption: newCaption }),
+    })
+      .then(response => {
+        if (response.ok) {
+          captionElement.innerHTML = newCaption;  // Update the caption with the new value
+        //   alert("Caption updated successfully.");
+          document.getElementById('editbtn').style.display=''
+          // Show the edit button again and hide the update button
+          document.querySelector(`#update-btn-${imageId}`).style.display = 'none';
+          document.querySelector(`#edit-btn-${imageId}`).style.display = 'inline-block';
+        } else {
+          response.text().then(errorText => {
+            console.error("Error updating caption:", errorText);
+          });
+        }
+      })
+      .catch(error => {
+        console.error("Network error:", error);
+      });
+  }
+}
+
+
+function openmapmodal() {
+    const modal = new bootstrap.Modal(document.getElementById('locationModal'));
+    modal.show();
+}
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const userRole = JSON.parse(localStorage.getItem("user")).role;
+        const statusContainer = document.getElementById('status-container');
+        const role=JSON.parse(localStorage.getItem('user')).role;
+
+    if (userRole === 'Journalist') {
+        // Hide the status container if the user is a Journalist
+        statusContainer.style.display = 'none';
+    }
+        const articleId = {{id}};
+        const token = localStorage.getItem('token');
+        const apiUrl = `/api/articles/${articleId}/`;
+
+        // Fetch article details and populate the form
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                console.log(data)
+                fetchImageGallery(data.id,token)
+                const tagsString = data.tags;
+                tagsArray = tagsString.split(',').map(tag => tag.trim());
+                document.getElementById('title').value = data.title;
+                document.getElementById('subtitle').value = data.subtitle || '';
+                console.log(data.content)
+                setTimeout(() => {
+                    // Check if TinyMCE is initialized
+                    if (tinymce.get('editor-container')) {
+                        tinymce.get('editor-container').setContent(data.content);
+                    }
+                }, 1000);
+                document.getElementById('author_name').value=data.author_name 
+                document.getElementById('email').value=data.email 
+                document.getElementById('category').value = data.category;
+                document.getElementById('publish_date').value=data.publish_date;
+                document.getElementById('latitudeInput').value=data.latitude;
+                document.getElementById('longitudeInput').value=data.longitude;
+                document.getElementById('locationSearch').value=data.city;
+                let locationString = data.city;
+
+let locationParts = locationString.split(',');
+
+// Assuming the format is "City, State, Country"
+let city = locationParts[0].trim();
+let state = locationParts[1]?.trim();  // The `?.` operator handles cases where state might be undefined
+let country = locationParts[2]?.trim();
+
+                updatedlocation = [{
+                    latitude: data.latitude,
+                    longitude: data.longitude,
+                    city,
+                    state,
+                    country
+                }];
+                console.log(updatedlocation)
+                const statusdiv=document.getElementById('status');
+    if (data.status === 'published' && role === 'Editor') {
+    statusdiv.setAttribute('disabled', 'true');
+}
+                document.getElementById('status').value = data.status;
+                
+            } else {
+                console.error('Failed to fetch article data');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+
+
+    async function fetchImageGallery(articleId, token) {
+        const apiUrl = `/api/article-images/?article=${articleId}`; // Add the article ID as a query parameter
+        const imageGallery = document.getElementById("imageGallery");
+        imageGallery.innerHTML = '<p class="text-muted">Loading images...</p>';
+        
+        try {
+            const response = await fetch(apiUrl, {
+                method: "GET",
+                headers: {
+                    'Authorization': `Bearer ${token}`, // Include your token for authentication
+                    'Content-Type': 'application/json',
+                },
+            });
+    
+            if (response.ok) {
+                const result = await response.json();
+                images=result.results;
+                if (images && images.length > 0) {
+                    // Render images in a grid
+                    imageGallery.innerHTML = images.map(image => `
+                      <div class="col-md-4 position-relative">
+                        <div class="card">
+                          <div class="position-relative">
+                            <img 
+                              src="${image.image}" 
+                              class="card-img-top" 
+                              alt="${image.caption || 'Article Image'}" 
+                              style="height:200px; object-fit: cover; cursor: pointer;" 
+                              onclick="showFullImage('${image.image}')"
+                            >
+                            <button 
+                              class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 rounded-circle" 
+                              onclick="deleteImage(${image.id})"
+                              style="z-index: 1;"
+                            >
+                              <i class="fas fa-trash"></i> <!-- Font Awesome Icon for Delete -->
+                            </button>
+                          </div>
+                          <div class="card-body">
+  <p class="card-text">
+    <span id="caption-${image.id}" class="caption-text">${image.caption || 'No caption available'}</span>
+    <button class="btn btn-sm btn-outline-primary ms-2" id='editbtn' onclick="editCaption(${image.id})">
+      <i class="fas fa-pencil"></i> 
+    </button>
+    <button class="btn btn-sm btn-outline-success ms-2 mt-2" id="update-btn-${image.id}" style="display: none;" onclick="updateCaption(${image.id})">
+      <i class="fas fa-check"></i> Update
+    </button>
+  </p>
+</div>
+                        </div>
+                      </div>
+                    `).join('');
+                  } else {
+                    // Handle no images found
+                    imageGallery.innerHTML = '<p class="text-warning">No images available for this article.</p>';
+                  }
+                  
+                
+                console.log("Images fetched successfully:", result);
+                return result; // Return the result for further processing
+            } else {
+                console.error("Error fetching images:", await response.text());
+            }
+        } catch (error) {
+            console.error("Network error:", error);
+        }
+        return; // Return null in case of an error
+    }
+    function showFullImage(imageUrl) {
+        const modalImage = document.getElementById('modalImage');
+        modalImage.src = imageUrl;  // Set the source of the image in the modal
+        const myModal = new bootstrap.Modal(document.getElementById('imageModal'));  // Initialize Bootstrap modal
+        myModal.show();  // Show the modal
+      }
+
+    let updatedlocation = [];
+
+
+let map;
+
+document.addEventListener('DOMContentLoaded', function () {
+    map = L.map('mapContainer').setView([51.505, -0.09], 13);
+
+    // OpenStreetMap base layer
+    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors',
+    });
+
+    // Mapbox satellite layer
+    {% comment %} const satelliteLayer = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=YOUR_MAPBOX_ACCESS_TOKEN', {
+        attribution: '&copy; <a href="https://www.mapbox.com/">Mapbox</a>',
+        tileSize: 512,
+        zoomOffset: -1
+    });{% endcomment %}
+
+    // Add OpenStreetMap as the default layer
+    osmLayer.addTo(map); 
+
+    const marker = L.marker([51.505, -0.09], { draggable: true }).addTo(map);
+    
+    const modalElement = document.getElementById('locationModal');
+    modalElement.addEventListener('shown.bs.modal', function () {
+        setTimeout(() => {
+            map.invalidateSize(); // Force Leaflet to recalculate dimensions
+        }, 100); // Optional: Add a small delay
+    });
+    // Toggle between OpenStreetMap and satellite layer
+    const layerControl = L.control.layers({
+        "OpenStreetMap": osmLayer,
+        "Satellite": satelliteLayer
+    }).addTo(map);
+    
+    // Search by location (village, street, postal code, etc.)
+    document.getElementById('locationSearch').addEventListener('input', async function (e) {
+        const query = e.target.value;
+        if (query.length > 2) {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&addressdetails=1`);
+            const results = await response.json();
+            if (results.length > 0) {
+                const { lat, lon, address } = results[0];
+                map.setView([lat, lon], 13);
+                marker.setLatLng([lat, lon]);
+                updateLatLngInputs(lat, lon);
+                fetchAddress(lat, lon); // Fetch and display the address (city, state, country, street, postal code, etc.)
+            }
+        }
+    });
+
+    // Search by latitude and longitude
+    document.getElementById('latitudeInput').addEventListener('change', updateMapByLatLng);
+    document.getElementById('longitudeInput').addEventListener('change', updateMapByLatLng);
+
+    function updateMapByLatLng() {
+        const lat = parseFloat(document.getElementById('latitudeInput').value);
+        const lon = parseFloat(document.getElementById('longitudeInput').value);
+        if (!isNaN(lat) && !isNaN(lon)) {
+            map.setView([lat, lon], 13);
+            marker.setLatLng([lat, lon]);
+            fetchAddress(lat, lon); // Fetch and display the address (city, state, country)
+        }
+    }
+
+    // Update latitude and longitude inputs when the marker is moved
+    marker.on('moveend', function (e) {
+        const { lat, lng } = e.target.getLatLng();
+        updateLatLngInputs(lat, lng);
+        fetchAddress(lat, lng); // Fetch and display the address (city, state, country, street, postal code, etc.)
+    });
+
+    // Confirm and log selected location
+    document.getElementById('confirmLocation').addEventListener('click', function () {
+        const { lat, lng } = marker.getLatLng();
+        console.log(updatedlocation);
+        const modal = document.getElementById("locationModal");
+        if (modal) {
+            bootstrap.Modal.getInstance(modal).hide();
+        }
+    });
+
+    function updateLatLngInputs(lat, lon) {
+        document.getElementById('latitudeInput').value = lat.toFixed(6);
+        document.getElementById('longitudeInput').value = lon.toFixed(6);
+    }
+
+    // Fetch address using Reverse Geocoding
+    async function fetchAddress(lat, lon) {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`);
+        const data = await response.json();
+        const address = data.address || {};
+        console.log(address)
+        // Extract the components (village, street, postal code, etc.)
+        const village = address.village || 'Unknown Village';
+        const street = address.road || 'Unknown Street';
+        const postalCode = address.postcode || 'Unknown Postal Code';
+        const city = address.city || address.city_district || address.suburb || 'Unknown City';
+        const state = address.state || 'Unknown State';
+        const country = address.country || 'Unknown Country';
+
+        // Update the location search field
+        document.getElementById('locationSearch').value = `${city}, ${state}, ${country}`;
+
+        // Store detailed location data
+        updatedlocation = [{
+            latitude: lat.toFixed(20),
+            longitude: lon.toFixed(20),
+            city,
+            state,
+            country
+        }];
+    }
+
+    // Add click event to map to select location
+    map.on('click', function (e) {
+        const lat = e.latlng.lat;
+        const lon = e.latlng.lng;
+        marker.setLatLng([lat, lon]); // Move the marker to the clicked location
+        updateLatLngInputs(lat, lon); // Update the input fields with the new coordinates
+        fetchAddress(lat, lon); // Fetch and display the address (village, street, postal code, etc.)
+    });
+});
+
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+    const publishDateInput = document.getElementById("publish_date");
+
+    // Initialize Flatpickr with future date restrictions
+    flatpickr(publishDateInput, {
+        minDate: new Date().fp_incr(1),  // Only allow future dates
+        dateFormat: "Y-m-d",  // Format the date
+        locale: "en",  // Locale for language (optional)
+        theme: "light",  // Flatpickr theme, you can also use "dark" if desired
+        disableMobile: true,  // Disable mobile version of the picker for better UX
+        placeholder: "Select a future date",
+        onChange: function(selectedDates, dateStr, instance) {
+            // Optionally, you can handle the date change here
+            console.log("Selected date: ", dateStr);
+        }
+    });
+});
+
+
+    // Form submission validation
+    document.getElementById('submitbtn').addEventListener('click', function() {
+        const imageInput = document.getElementById('image');
+        const categoryInput = document.getElementById('category');
+        const publishDateInput = document.getElementById('publish_date');
+        const agreeToTermsCheckbox = document.getElementById('agree_to_terms');
+        const status = document.getElementById('status');
+        const token = localStorage.getItem("token");
+        const data = JSON.parse(localStorage.getItem("user"));
+        let isValid = true;
+        if (categoryInput.value === '') {
+            categoryInput.focus();
+            categoryInput.style.border = '1px solid red';
+            isValid = false;
+        } else if (!validatePublishDate()) {
+            publishDateInput.focus();
+            publishDateInput.style.border = '1px solid red';
+            isValid = false;
+        } else if (!agreeToTermsCheckbox.checked) {
+            document.getElementById('form-err').innerText = 'You must agree to the terms and conditions.';
+            isValid = false;
+        }
+        
+        if (isValid) {
+            // Prepare FormData
+            const submitButton = document.getElementById('submitbtn');
+            const loader = document.getElementById('loader');
+            loader.style.display = 'inline-block';
+            submitButton.disabled = true;
+            id={{id}}
+            const formData = new FormData();
+            formData.append('title', document.getElementById('title').value);
+            formData.append('subtitle', document.getElementById('subtitle').value);
+            formData.append('content', tinymce.get('editor-container').getContent());
+            formData.append('author_name', document.getElementById('author_name').value);
+            formData.append('author', data.id); // Assuming you're getting the user's ID from localStorage
+            formData.append('email', document.getElementById('email').value);
+    
+            // Add image if provided, otherwise send the existing one (if any)
+            if (imageInput.files.length > 0) {
+                formData.append('image', imageInput.files[0]);
+            }
+    
+            formData.append('category', categoryInput.value);
+            formData.append('publish_date', publishDateInput.value);
+            formData.append('agreed_to_terms', agreeToTermsCheckbox.checked ? "1" : "0");
+            formData.append('status', status.value);
+            if (updatedlocation.length > 0) {
+                formData.append('country', updatedlocation[0].country);
+                formData.append('state', updatedlocation[0].state);
+                formData.append('city', updatedlocation[0].city);
+                formData.append('latitude', updatedlocation[0].latitude);
+                formData.append('longitude', updatedlocation[0].longitude);
+                console.log(updatedlocation[0].state);
+            }
+    
+            // Send the FormData using fetch
+            const articleId = {{id}}; // Get article ID dynamically
+            fetch(`/api/articles/${articleId}/`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`, // Add your token
+                },
+                body: formData, // Use FormData as the request body
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data) {
+                    console.log(data)
+                    uploadImages(data.id,token)
+                    const modal = new bootstrap.Modal(document.getElementById('submissionSuccessModal'));
+                    modal.show();
+                } else {
+                    alert('Error updating article: ' + JSON.stringify(data));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while submitting the article.');
+            })
+            .finally(() => {
+                // Hide loader and re-enable the submit button
+                loader.style.display = 'none';
+                submitButton.disabled = false;
+            });
+        } else {
+            alert('Please fill in all fields correctly.');
+        }
+    });
+    
+    async function uploadImages(userId,token) {
+        const apiUrl = "/api/article-images/";
+        
+        if (uploadedImages.length === 0) {
+            return;
+        }
+    
+        for (const image of uploadedImages) {
+            const formData = new FormData();
+            console.log(formData)
+            formData.append("image", image.file); // Add the image file
+            formData.append("caption", image.caption); // Add the image file
+            formData.append("article", userId); // Add the user ID
+    
+            try {
+                const response = await fetch(apiUrl, {
+                    method: "POST",
+                    headers: {
+                        'Authorization': `Bearer ${token}`, // Add your token
+                    },
+                    body: formData,
+                });
+    
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log("Image added successfully:", result);
+                } else {
+                    console.error("Error uploading image:", await response.text());
+                }
+            } catch (error) {
+                console.error("Network error:", error);
+            }
+        }
+        return
+    }
+    
+    
+
+
+
+
+
+// Validation functions
+const validateTitle = () => {
+    const title = document.getElementById('title').value;
+    document.getElementById('title-error').innerText=''
+    document.getElementById('title').style.border='1px solid var(--border-color)'
+    // Check if title starts with space
+    if (title.trim().length === 0) {
+        document.getElementById('title-error').innerText = "Title cannot be empty or start with spaces.";
+        return false;
+    }
+
+    // Check for title length (must be at least 10 characters)
+    if (title.length < 10) {
+        document.getElementById('title-error').innerText = "Title must be at least 10 characters long.";
+        return false;
+    }
+
+    // Check if title contains special characters
+    const specialCharsPattern = /[!@#$%^"{}<>]/g; // List of special characters
+    if (specialCharsPattern.test(title)) {
+        document.getElementById('title-error').innerText = "Title cannot contain special characters.";
+        return false;
+    }
+
+    // If all checks pass, clear the error message
+    document.getElementById('title-error').innerText = '';
+    return true;
+};
+
+const validateSubtitle = () => {
+    const subtitle = document.getElementById('subtitle').value;
+    document.getElementById('subtitle-error').innerText=''
+    document.getElementById('subtitle').style.border='1px solid var(--border-color)'
+    // If subtitle is filled, apply validation
+    if (subtitle) {
+        // Check if subtitle starts with space
+        if (subtitle.trim().length === 0) {
+            document.getElementById('subtitle-error').innerText = "Subtitle cannot start with spaces.";
+            return false;
+        }
+
+        // Check for subtitle length (must be at least 10 characters)
+        if (subtitle.length < 10) {
+            document.getElementById('subtitle-error').innerText = "Subtitle must be at least 10 characters long.";
+            return false;
+        }
+
+        // Check if subtitle contains special characters
+        const specialCharsPattern = /[!@#$%^"{}<>]/g; // List of special characters
+        if (specialCharsPattern.test(subtitle)) {
+            document.getElementById('subtitle-error').innerText = "Subtitle cannot contain special characters.";
+            return false;
+        }
+    } else {
+        // If subtitle is not provided, no validation needed, so clear any error message
+        document.getElementById('subtitle-error').innerText = '';
+        return true;
+    }
+
+    // If all checks pass, clear the error message
+    document.getElementById('subtitle-error').innerText = '';
+    return true;
+};
+
+const validateAuthorName = () => {
+    document.getElementById('author-error').innerText=''
+    document.getElementById('author_name').style.border='1px solid var(--border-color)'
+    const authorName = document.getElementById('author_name').value;
+    const authorNameError = document.getElementById('author-error');
+    const authorNameRegex = /^[A-Za-z\s]+(?: [A-Za-z]+)*$/; // Allows alphabetic characters and single spaces between words
+
+    // Check if the author name starts with a space
+    if (authorName.startsWith(' ')) {
+        authorNameError.innerText = "Author name should not start with a space.";
+        return false;
+    }
+
+    // Check if the author name contains numbers or special characters
+    if (!authorNameRegex.test(authorName)) {
+        authorNameError.innerText = "Author name can only contain letters and single spaces.";
+        return false;
+    }
+
+    // Check if there are multiple spaces between words
+    if (/\s{2,}/.test(authorName)) {
+        authorNameError.innerText = "Author name cannot have multiple spaces between words.";
+        return false;
+    }
+
+    // If all validations pass, clear error message
+    authorNameError.innerText = "";
+    return true;
+};
+
+// Adding event listener for live validation (optional)
+
+
+
+
+
+const validateEmail = () => {
+    document.getElementById('email-error').innerText=''
+    document.getElementById('email').style.border='1px solid var(--border-color)'
+    const email = document.getElementById('email').value;
+    const emailPattern = /^[a-zA-Z][a-zA-Z0-9._-]*@[a-zA-Z0-9-]+\.[a-zA-Z]{2,6}(\.[a-zA-Z]{2,6})?$/;
+    const emailErrorElement = document.getElementById('email-error');
+    
+    // Clear previous errors
+    emailErrorElement.innerText = '';
+    
+    // Check if the email starts with spaces
+    if (email.startsWith(' ')) {
+        emailErrorElement.innerText = "Email cannot start with a space.";
+        return false;
+    }
+
+    // Check if the email matches the pattern
+    if (!emailPattern.test(email)) {
+        // Check if email contains invalid characters
+        if (/[^a-zA-Z0-9._@-]/.test(email)) {
+            emailErrorElement.innerText = "Email contains invalid characters. Only letters, numbers, ._- are allowed.";
+        }
+        // Check if email domain or subdomain is missing or invalid
+        else if (!email.includes('@') || !email.includes('.')) {
+            emailErrorElement.innerText = "Please enter a valid email address.";
+        }
+        else {
+            emailErrorElement.innerText = "Please enter a valid email address.";
+        }
+        return false;
+    }
+
+    // Email is valid
+    emailErrorElement.innerText = '';
+    return true;
+};
+
+const validatePublishDate = () => {
+    document.getElementById('publish_date-error').innerText=''
+    document.getElementById('publish_date').style.border='1px solid var(--border-color)'
+    const publishDate = new Date(document.getElementById('publish_date').value);
+    if (publishDate == '' ) {
+        document.getElementById('publish_date-error').innerText = errorMessages.publish_date;
+        return false;
+    } else {
+        document.getElementById('publish_date-error').innerText = '';
+        return true;
+    }
+};
+
+const validateAgreeToTerms = () => {
+    document.getElementById('form-err').innerText=''
+    const agreeToTerms = document.getElementById('agree_to_terms').checked;
+    console.log(agreeToTerms)
+    if (!agreeToTerms) {
+        document.getElementById('form-err').innerText = errorMessages.agree_to_terms;
+        return false;
+    } else {
+        document.getElementById('form-err').innerText = '';
+        return true;
+    }
+};
+// Add event listeners for real-time validation
+    document.getElementById('title').addEventListener('input', validateTitle);
+    document.getElementById('subtitle').addEventListener('input', validateSubtitle);
+    document.getElementById('author_name').addEventListener('input', validateAuthorName);
+    document.getElementById('email').addEventListener('input', validateEmail);
+    // document.getElementById('image').addEventListener('change', validateImage);
+    document.getElementById('category').addEventListener('change',()=>{
+         category.style.border='1px solid var(--border-color)'
+    });
+    document.getElementById('publish_date').addEventListener('change', validatePublishDate);
+    document.getElementById('agree_to_terms').addEventListener('change', validateAgreeToTerms);
+    // document.getElementById('tags-input').addEventListener('input',validateTags)
+</script>
+{% endblock %}

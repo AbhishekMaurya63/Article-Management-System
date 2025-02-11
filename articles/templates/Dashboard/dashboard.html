@@ -1,0 +1,278 @@
+{% extends "DashBoard/nav.html" %}
+{% load static %}
+{% block title %}Admin DashBoard{% endblock %}
+
+{% block content %}
+<div class="container-fluid dashboard-content">
+
+  <!-- First Row: Summary Cards -->
+  <div class="row mb-4 d-flex justify-content-center " style="height: fit-content;">
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Published Articles</h5>
+          <p class="card-text" id="total-articles">Loading...</p>
+          <button class="btn" onclick="window.location.href='/articles/articles/'">View Articles</button>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4" id="admin-section">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Registered Users</h5>
+          <p class="card-text" id="registered-users">Loading...</p>
+          <button class="btn" onclick="window.location.href='/articles/users/'">View Users</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Pending Articles</h5>
+          <p class="card-text" id="pending-articles">200+</p>
+          <button class="btn" onclick="window.location.href='/articles/articles/'">View Articles</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Second Row: Article Views Graph and Trending Articles -->
+  <div class="row mb-4">
+    <!-- Top Trending Articles -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Top Trending Articles</h5>
+                <ul class="list-group" id="top-trending-articles">
+                    <!-- Trending articles will be loaded here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Latest Articles -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title text-success">Latest Articles</h5>
+                <ul class="list-group" id="latest-articles">
+                    <!-- Latest articles will be loaded here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {% comment %} <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Active Employees</h5>
+          <ul class="list-group" id="active-employees">
+            <!-- Active employees will be loaded here -->
+          </ul>
+        </div>
+      </div>
+    </div> {% endcomment %}
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+  totalpublishArticle=''
+  totalpendingArticle=''
+  totaluser=''
+// Fetch the data for the cards when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+  const token = localStorage.getItem('token');
+  const userRole = JSON.parse(localStorage.getItem("user")).role;
+  // console.log(userRole)
+  if (userRole.toLowerCase() !== 'admin') {
+       document.getElementById('admin-section').style.display = 'none';
+   }
+  // Function to fetch registered users count
+  async function fetchUsersCount() {
+    const response = await fetch('/api/list/', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      document.getElementById('registered-users').textContent = data.count || '0';
+    } else {
+      document.getElementById('registered-users').textContent = 'Error loading data';
+    }
+  }
+
+  // Function to fetch published articles count
+  async function fetchPublishedArticlesCount() {
+    const response = await fetch('/api/articles/?status=published', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      document.getElementById('total-articles').textContent = data.count || '0';
+    } else {
+      document.getElementById('total-articles').textContent = 'Error loading data';
+    }
+  }
+
+  // Function to fetch unpublished articles count
+  async function fetchUnpublishedArticlesCount() {
+    const response = await fetch('/api/articles/', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      num=0
+      articls=data.results
+      articls.forEach(article=>{
+        if(article.status!=='published'){
+          num++
+        }
+      })
+      document.getElementById('pending-articles').innerText=num;
+    } else {
+      console.error('Error loading unpublished articles data');
+    }
+  }
+
+  // Fetch all the data when page loads
+  if (userRole.toLowerCase() == 'admin') {
+    fetchUsersCount();
+   }
+  fetchPublishedArticlesCount();
+  fetchUnpublishedArticlesCount();
+
+  // Fetch and display top trending articles
+  // Fetch and display top trending articles
+async function fetchTopTrendingArticles() {
+  try {
+    const response = await fetch('/api/articles/?status=published&ordering=-views', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const trendingList = document.getElementById('top-trending-articles');
+      
+      if (!trendingList) {
+        console.error('No element with id "top-trending-articles" found.');
+        return;
+      }
+
+      trendingList.innerHTML = ''; // Clear existing content
+
+      // Check if data.results exists and is not an empty array
+      if (data.results && data.results.length > 0) {
+        data.results.forEach(article => {
+          const li = document.createElement('li');
+          li.classList.add('list-group-item');
+
+          // Create a link to the article detail page
+          const link = document.createElement('a');
+          link.href = `/articles/articles/${article.id}/`; // Assuming article detail page URL
+          link.textContent = `${article.title} - ${article.views} views`; // Use actual views
+
+          li.appendChild(link);
+          trendingList.appendChild(li);
+        });
+      } else {
+        const li = document.createElement('li');
+        li.classList.add('list-group-item');
+        li.textContent = 'No Trending Articles Available';
+        trendingList.appendChild(li);
+      }
+
+    } else {
+      console.error('Failed to fetch data:', response.statusText);
+      displayErrorMessage('Failed to fetch trending articles');
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    displayErrorMessage('Error fetching trending articles');
+  }
+}
+
+// Fetch and display latest articles
+async function fetchLatestArticles() {
+  try {
+    const response = await fetch('/api/articles/?ordering=-publish_date', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const latestList = document.getElementById('latest-articles');
+      latestList.innerHTML = ''; // Clear existing content
+
+      if (data.results && data.results.length > 0) {
+        data.results.forEach(article => {
+          const li = document.createElement('li');
+          li.classList.add('list-group-item');
+
+          // Create a link to the article detail page
+          const link = document.createElement('a');
+          link.href = `/articles/articles/${article.id}/`; // Assuming article detail page URL
+          link.textContent = `${article.title} - ${article.publish_date}`;
+
+          li.appendChild(link);
+          latestList.appendChild(li);
+        });
+      } else {
+        const li = document.createElement('li');
+        li.classList.add('list-group-item');
+        li.textContent = 'No Latest Articles Available';
+        latestList.appendChild(li);
+      }
+
+    } else {
+      console.error('Failed to fetch data:', response.statusText);
+      displayErrorMessage('Failed to fetch latest articles');
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    displayErrorMessage('Error fetching latest articles');
+  }
+}
+
+// Function to display error messages
+function displayErrorMessage(message) {
+  const errorElement = document.createElement('div');
+  errorElement.classList.add('alert', 'alert-danger');
+  errorElement.textContent = message;
+  document.body.appendChild(errorElement);
+
+  setTimeout(() => {
+    errorElement.remove(); // Remove the error message after 5 seconds
+  }, 5000);
+}
+
+// Call the functions on page load or whenever necessary
+fetchTopTrendingArticles();
+fetchLatestArticles();
+
+});
+</script>
+{% endblock %}

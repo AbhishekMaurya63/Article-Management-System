@@ -1,0 +1,308 @@
+:root{
+    --primary-color:#3b0a61;
+    --background-color:#fff;
+    --text-color:#fff;
+    --border-color: #3b0a617a;
+}
+*{
+    font-family: sans-serif;
+}
+body {
+    overflow: auto;
+}
+.container{
+    min-height: 100vh;
+    width: 80vw;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.formRow{
+    width: 100vw;
+    min-height: 90vh;
+    border-radius: 12px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.3), -10px 0px 10px rgba(138, 43, 226,0.3);
+}
+.user{
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 10rem;
+    background: #8a2be2;
+    border-radius: 10px;
+    padding: 20px;
+    z-index: 1;
+    cursor: pointer;
+    /* box-shadow: 5px 5px 10px rgba(0,0,0,0.3), -5px -5px 10px rgba(255,255,255,0.3); */
+
+}
+.fa-user{
+    border: 10px solid #fff;
+    padding: 40px;
+    border-radius: 50%;
+    color: #fff;
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.3), -5px -5px 10px rgba(255,255,255,0.3);
+
+}
+.err{
+    font-size: 12px;
+}
+.animate{
+    animation: userIcon 5s ease-in 1 forwards;
+}
+@keyframes userIcon {
+    0%{
+        transform: translateY(0px);
+    }
+    7%{
+        transform: translateY(50%);
+    }
+    40%{
+        transform: translateY(-50%);
+    }
+    60%{
+        transform: translateY(50%);
+    }
+    80%{
+        transform: translateY(-10%);
+    }
+    100%{
+        transform: translateY(0px);
+    }
+}
+.userForm{
+    background: #fff;
+    border-radius: 9px;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 2;
+}
+form{
+    width: 100%;
+}
+
+.table {
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+}
+.table tr{
+    color: #8a2be2;
+    border: 1px solid #fff;
+}
+.table tr td input, .table tr td select{
+    border: 1px solid blueviolet;
+}
+.table tr td input:focus, .table tr td select:focus{
+    border: 1px solid blueviolet;
+    box-shadow: none;
+}
+.table tr td input::placeholder{
+    color: #892be28f;
+}
+.regbtn button {
+    width: 100%;
+    background: blueviolet;
+    color: #fff;
+    
+    border: 1px solid blueviolet;
+}
+.regbtn{
+    text-align: center;
+}
+.regbtn button:hover{
+    border: 1px solid blueviolet;
+    background: #fff;
+    color: blueviolet;
+}
+.inp{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    border: 1px solid blueviolet;
+    border-radius: 5px;
+}
+/* .inp button{
+    margin: 2px;
+} */
+.inp .pass, .inp button{
+    border: none;
+    background: transparent;
+}
+.inp .pass:focus{
+    border: none;
+    background: transparent;
+}
+@media (max-width: 1000px) {
+    .table tr td{
+        display: block;
+    }
+    .formRow{
+        width: 100%;
+    }
+    .regbtn{
+        display: flex;
+    }
+    
+}
+@media (max-width:575px) {
+    @keyframes userIcon {
+        0%{
+            transform: translateX(0px);
+        }
+        7%{
+            transform: translateX(50%);
+        }
+        35%{
+            transform: translateX(-50%);
+        }
+        60%{
+            transform: translateX(50%);
+        }
+        80%{
+            transform: translateX(-10%);
+        }
+        100%{
+            transform: translateX(0px);
+        }
+    }
+    .container{
+        width: 100vw;
+    }
+    .regbtn{
+        text-align: center;
+    }
+}
+
+
+
+/* Login CSS */
+
+.wback{
+    background: blueviolet !important;
+    color: #fff !important;
+    border-radius: 10px;
+}
+.wback h1{
+    display: grid;
+    place-items: center;
+    font-weight: 900;
+    margin: 0;
+    padding: 3px;
+
+}
+/* .modal{
+  background: var(--border-color);
+} */
+.modal-dialog{
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-color);
+}
+.modal-content{
+    height: 380px;
+    width: 350px;
+    border: 1px solid var(--border-color);
+    background: var(--background-color)
+}
+.modal-header{
+    border-bottom: 1px solid var(--background-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.modal-header .modal-title{
+    height: 100%;
+    width: 100%;
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: var(--primary-color);
+   
+}
+.modal-header .modal-title i{
+    font-size: 100px !important;
+    color: var(--primary-color);
+}
+
+.show{
+    overflow: hidden;
+}
+.modal-footer{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+.modal-footer button{
+    width:200px;
+    margin: auto;
+    background: var(--primary-color);
+    color: var(--background-color);
+    border: 1px solid var(--primary-color);
+    margin-bottom: 10px;
+}
+.modal-footer button:hover{
+    background: var(--background-color);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+
+}
+.modal-footer button:active{
+    background: var(--primary-color);
+    color: var(--background-color);
+    border: 1px solid var(--primary-color);
+
+}
+.modal-body{
+    text-align: center;
+    color: var(--primary-color);
+}
+
+
+/* Add pulse animation to icon */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Improve modal design */
+.modal-content {
+    background-color: #f9f9f9;
+}
+
+.modal-header {
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.modal-footer {
+    border-top: 2px solid #e0e0e0;
+}
+
+/* Style the button hover effect */
+.btn-primary {
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #007bff;
+    box-shadow: 0px 0px 10px rgba(0, 123, 255, 0.5);
+}

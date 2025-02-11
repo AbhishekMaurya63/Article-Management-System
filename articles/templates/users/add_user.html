@@ -1,0 +1,197 @@
+{% extends "DashBoard/nav.html" %}
+{% load static %}
+{% block title %}Add User{% endblock %}
+{% block style %}
+<link href="{% static 'css/users.css' %}" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+{% endblock %}
+{% block content %}
+<div class="main-container w-100 ">
+  <div class="container mt-5">
+    <div class="row mb-4">
+      <!-- Back Button (Top Left) -->
+      <div class="col-12">
+         <button class="btn btn-secondary" id="back-button">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+      </div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 style="color: var(--primary-color);">Add New User</h2>
+      <a href="{% url 'articles:Users' %}" class="btn btn-secondary">Back to Users</a>
+    </div>
+
+    <!-- User Form -->
+    <form id="add-user-form" class="needs-validation" novalidate>
+      {% csrf_token %}
+      <div class="row g-2">
+        <div class="col-md-12">
+          <label for="username" class="form-label">Username</label>
+          <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" maxlength="30" required>
+          <div class="invalid-feedback">Please enter a valid username (min 3 characters).</div>
+          <div id="usernameErr" style='color:red'></div>
+        </div>
+        <div class="col-md-12">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" class="form-control" id="email" name="email" maxlength="100" placeholder="Enter email" required>
+          <div class="invalid-feedback">Please provide a valid email address.</div>
+          <div id="emailErr" style='color:red'></div>
+        </div>
+        <div class="col-md-12">
+          <label for="password" class="form-label">Password</label>
+          <div class="inp" id="inp">
+            <input type="password" class="form-control pass" id="password" maxlength="30" minlength="8" name="password" placeholder="Enter password" style="color: blueviolet;" required>
+            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('password', this)">
+                <i class="fas fa-eye" id="eye-password" style="color: blueviolet;"></i>
+            </button>
+          </div>
+          <div class="invalid-feedback">Password is required.</div>
+        </div>
+        <div class="col-md-12">
+          <label for="role" class="form-label">Role</label>
+          <select class="form-select" id="role" name="role" required>
+            <option value="">Select role</option>
+            <option value="Journalist">Journalist</option>
+            <option value="Editor">Editor</option>
+            <option value="Admin">Admin</option>
+          </select>
+          <div class="invalid-feedback">Please select a role.</div>
+        </div>
+      </div>
+      <div class="row g-2 mt-3">
+        <div class="col-md-12 text-center">
+          <button type="submit" class="btn btn-primary" id="submit-btn">Add User</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- Modal for Successful User Submission -->
+<div class="modal fade" id="submissionSuccessModal" tabindex="-1" aria-labelledby="submissionSuccessModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="submissionSuccessModalLabel">User Registered Successfully</h5>
+      </div>
+      <div class="modal-body">
+        <p>New User has been successfully Registered!</p>
+      </div>
+      <div class="modal-footer">
+        <!-- Button to see the user -->
+        <a id="seeUserBtn" href="/articles/users/" class="btn btn-success">See users</a>
+        <!-- Button to go back to the dashboard -->
+        <a id="backToDashboardBtn" href="/articles/dashboard/" class="btn btn-secondary">Back to Dashboard</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+  // Form Validation
+  document.addEventListener("DOMContentLoaded", function () {
+    const data = JSON.parse(localStorage.getItem("user"));
+        // Role-based navigation control
+        const role = data.role;  // Get the user role from localStorage
+        // Based on the user's role, modify the navbar
+        if (role === 'Journalist' || role === 'Editor') {
+          alert(`${role} Don't have permissions to see this page`)
+          window.history.back();
+        } ;
+
+    const form = document.getElementById("add-user-form");
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      if (form.checkValidity() === false) {
+        event.stopPropagation();
+      } else {
+        handleSubmit();  // Handle the form submission if valid
+      }
+      form.classList.add("was-validated");
+    });
+
+    // Custom Validation for Username
+    const usernameField = document.getElementById("username");
+    usernameField.addEventListener("input", function () {
+      if (usernameField.value.length < 3) {
+        usernameField.setCustomValidity("Username must be at least 3 characters long.");
+      } else {
+        usernameField.setCustomValidity("");
+      }
+    });
+
+    // Handle form submission
+    async function handleSubmit() {
+  const formData = new FormData(form);
+  const data = {
+    username: formData.get("username"),
+    email: formData.get("email"),
+    password: formData.get("password"),
+    role: formData.get("role"),
+    is_active: formData.get("is_active") === "true",
+  };
+
+  try {
+    const response = await fetch('/api/register/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    // Check if the response is JSON
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      const responseData = await response.json();
+
+      // Handle the response data
+      if (responseData.status === 'Success') {
+        const modal = new bootstrap.Modal(document.getElementById('submissionSuccessModal'));
+        modal.show();
+      } else {
+        console.log(responseData)
+        document.getElementById('usernameErr').innerText=responseData.errors.username
+        document.getElementById('emailErr').innerText=responseData.errors.email
+      }
+    } else {
+      throw new TypeError("Response is not JSON.");
+    }
+  } catch (error) {
+    console.error("Error submitting form:", error);
+    alert("An error occurred. Please try again later.");
+  }
+}
+
+
+    // Password visibility toggle
+    const passwordInput = document.getElementById('password');
+    const togglePasswordButton = document.getElementById('toggle-password');
+    const passwordEyeIcon = document.getElementById('password-eye');
+  });
+
+  const togglePasswordVisibility = (id, button) => {
+    console.log(id, button)
+    const passwordField = document.getElementById(id);
+    const icon = button.querySelector('i');
+    passwordField.type = passwordField.type === 'password' ? 'text' : 'password';
+    icon.classList.toggle('fa-eye'); 
+    icon.classList.toggle('fa-eye-slash'); 
+};
+const updatePasswordIcon = (id) => {
+    const passwordField = document.getElementById(id);
+    const icon = document.querySelector(`.toggle-password [data-password="${id}"]`);
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+    if (passwordField.type === 'text') {
+        icon.classList.toggle('fa-eye'); 
+        icon.classList.toggle('fa-eye-slash'); 
+    }
+};
+</script>
+{% endblock %}
+{% endblock %}

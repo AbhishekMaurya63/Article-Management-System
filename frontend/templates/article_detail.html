@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Article Detail - {{ article.title }}{% endblock %}
+{% block style %}
+<link rel="stylesheet" href="{% static 'css/article_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="article-detail">
+        <!-- Article Header -->
+        <div class="row">
+            <div class="col-md-12">
+                <h1>{{ article.title }}</h1>
+                <p class="text-muted">Published on {{ article.publish_date|date:"F j, Y" }} by {{ article.author_name }}</p>
+            </div>
+        </div>
+
+        <!-- Article Image -->
+        <div class="row">
+            <div class="col-md-12">
+                <img src="/media/{{ article.image }}" alt="{{ article.title }}" class="img-fluid rounded mb-4">
+            </div>
+        </div>
+
+        <!-- Article Content -->
+        <div class="row">
+            <div class="col-md-12">
+                <div>{{ article.content|safe }}</div>
+            </div>
+        </div>
+        
+
+        <!-- Related Articles (Optional) -->
+        <div class="row">
+            <div class="col-md-12">
+                <h3>Related Articles</h3>
+                <ul class="list-unstyled">
+                    {% for related_article in related_articles %}
+                        <li>
+                            <a href="{% url 'article_detail' related_article.id %}" class="text-decoration-none">
+                                <h5>{{ related_article.title }}</h5>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,392 @@
+{% extends "DashBoard/nav.html" %}
+{% load static %}
+{% block title %}Users{% endblock %}
+{% block style %}
+<link href="{% static 'css/users.css' %}" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+  .page-item .page-link{
+    border: 1px solid blueviolet;
+    background-color: blueviolet;
+    color:#fff
+      }
+    .page-item.disabled .page-link{
+    border: 1px solid #892be27d;
+      background-color: #892be27d;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="main-container w-100">
+  <div class="container-fluid mt-2 mb-5" style="height: fit-content;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 style="color: var(--primary-color);">Users</h2>
+      <a href="{% url 'articles:Add_users' %}" class="btn btn-primary">Add New User</a>
+    </div>
+
+    <!-- Filter Section -->
+    <form method="get" id="filter-form" class="mb-3">
+      <div class="row g-2">
+        <div class="col-md-3">
+          <input type="text" name="search" id="search" class="form-control" placeholder="Search by name" value="{{ request.GET.search }}">
+        </div>
+        <div class="col-md-3">
+          <select name="role" id="role" class="form-select">
+            <option value="">Select Role</option>
+            <option value="journalist" {% if request.GET.role == "journalist" %}selected{% endif %}>Journalist</option>
+            <option value="editor" {% if request.GET.role == "editor" %}selected{% endif %}>Editor</option>
+            <option value="admin" {% if request.GET.role == "admin" %}selected{% endif %}>Admin</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+            <!-- Flatpickr Date Filter -->
+            <input type="date" name="date_filter" id="date-filter" class="form-control" placeholder="Select Date" value="{{ request.GET.date_filter }}">
+          </div>
+        <div class="col-md-3 d-flex justify-content-between">
+          <button type="submit" class="btn btn-primary w-100" id="filter-btn">Filter</button>
+          <a href="#" class="btn btn-secondary w-100" id="clear-btn">Clear</a>
+        </div>
+      </div>
+    </form>
+
+    <!-- Users Table -->
+    <div class="table-responsive rounded mb-5" style="min-height: 500px; overflow-y: auto; overflow-x: auto;">
+      <table class="table table-bordered table-hover" id="users-table">
+        <thead class="table-light">
+          <tr>
+            <th class="text-center">User ID</th>
+            <th class="text-center">Username</th>
+            <th class="text-center">Email</th>
+            <th class="text-center">Role</th>
+            <th class="text-center">Status</th>
+            <th class="text-center">Joined Date</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Users will be loaded here by JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <nav id="pagination-nav">
+      <ul class="pagination justify-content-center">
+        <!-- Pagination will be added here by JavaScript -->
+      </ul>
+    </nav>
+  </div>
+</div>
+
+
+
+<!-- Modal for Confirming User Deletion -->
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteConfirmationModalLabel">Confirm Deletion</h5>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this User?</p>
+        <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+      </div>
+      <div class="modal-footer">
+        <!-- Confirm Delete Button -->
+        <button id="confirmDeleteBtn" class="btn btn-danger">Confirm Delete</button>
+        <!-- Cancel Button -->
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Successful user Deletion -->
+<div class="modal fade" id="deletionSuccessModal" tabindex="-1" aria-labelledby="deletionSuccessModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deletionSuccessModalLabel">User Deleted Successfully</h5>
+      </div>
+      <div class="modal-body">
+        <p>User has been successfully deleted!</p>
+      </div>
+      <div class="modal-footer">
+        <!-- Button to go back to the dashboard -->
+        <a id="backToDashboardBtn" href="/articles/dashboard/" class="btn btn-primary">Back to Dashboard</a>
+        <!-- Button to see another article (or redirect to article listing) -->
+        <a id="seeAnotherArticleBtn" href="/articles/users/" class="btn btn-secondary">See Users</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+  let allUsers = []; // Array to store users for the current page
+let currentPage = 1; // Track the current page
+let nextPage = null; // Next page URL
+let previousPage = null; // Previous page URL
+const apiUrl = '/api/list/'; // Base API endpoint
+const token = localStorage.getItem('token'); // Authentication token
+
+// Function to fetch users from the paginated API with optional filters
+async function fetchUsers(page = 1, filters = {}) {
+  let url = `${apiUrl}?page=${page}`;
+  console.log(url)
+  if (filters.username) url += `&username=${filters.username}`;
+  if (filters.role) url += `&role=${filters.role}`;
+  if (filters.dateJoined) url += `&date_joined=${filters.dateJoined}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      allUsers = data.results; // Store users for the current page
+      nextPage = data.next; // Next page URL
+      previousPage = data.previous; // Previous page URL
+      currentPage = page; // Update current page
+      renderTable(allUsers,page); // Render the table with users
+      renderPagination(data); // Render pagination controls
+    } else {
+      alert('Failed to fetch users. Please try again.');
+    }
+  } catch (error) {
+    console.error('Error fetching users:', error);
+  }
+}
+
+// Function to render the table
+function renderTable(users,page) {
+  const tbody = document.getElementById('users-table').querySelector('tbody');
+  tbody.innerHTML = ''; // Clear the table body
+
+  if (users.length === 0) {
+    const noDataRow = document.createElement('tr');
+    noDataRow.innerHTML = `
+      <td colspan="7" class="text-center bg-white">
+        <img src="{% static 'images/no_data.jpg' %}" alt="No Data Found" style="width: 40%;" />
+        <p>No users found</p>
+      </td>
+    `;
+    tbody.appendChild(noDataRow);
+  } else {
+    users.forEach((user, index) => {
+      const { date, time } = formatDateTime(user.date_joined);
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class='text-center'>${(index + 1)+(page-1)*10}</td>
+        <td class='text-center'>${user.username}</td>
+        <td class='text-center'>${user.email}</td>
+        <td class='text-center'>${user.role}</td>
+        <td class='text-center'>${user.is_active ? 'Active' : 'Inactive'}</td>
+        <td class='text-center'>${date} ${time}</td>
+        <td class='text-center'>
+          <a href="/articles/user_details/${user.id}/" class="btn btn-info btn-sm"><i class='fa fa-eye'></i></a>
+          <a href="/articles/user_updates/${user.id}/" class="btn btn-info btn-sm"><i class='fa fa-pencil'></i></a>
+          <button type="button" class="btn btn-danger btn-sm" onclick="deleteUser(${user.id})"><i class='fa fa-trash'></i></button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+}
+
+// Function to render pagination controls
+function renderPagination(data) {
+  const paginationNav = document.getElementById('pagination-nav');
+  paginationNav.innerHTML = ''; // Clear existing pagination
+
+  const ul = document.createElement('ul');
+  ul.className = 'pagination justify-content-center';
+
+  // Previous button
+  const prevLi = document.createElement('li');
+  prevLi.className = `page-item ${data.previous ? '' : 'disabled'}`;
+  prevLi.innerHTML = `<a class="page-link" href="#" ${data.previous ? `data-page="${data.previous}"` : ''}>Previous</a>`;
+  ul.appendChild(prevLi);
+
+  // Current page indicator (optional)
+  const currentLi = document.createElement('li');
+  currentLi.className = 'page-item disabled';
+  currentLi.innerHTML = `<span class="page-link">Page ${currentPage}</span>`;
+  ul.appendChild(currentLi);
+
+  // Next button
+  const nextLi = document.createElement('li');
+  nextLi.className = `page-item ${data.next ? '' : 'disabled'}`;
+  nextLi.innerHTML = `<a class="page-link" href="#" ${data.next ? `data-page="${data.next}"` : ''}>Next</a>`;
+  ul.appendChild(nextLi);
+
+  paginationNav.appendChild(ul);
+
+  // Add event listeners for pagination buttons
+  ul.querySelectorAll('a.page-link').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      const pageUrl = event.target.getAttribute('data-page');
+      if (pageUrl) fetchUsersByUrl(pageUrl); // Fetch users by the next/previous URL
+    });
+  });
+}
+
+// Function to fetch users by the next/previous URL
+async function fetchUsersByUrl(url) {
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      allUsers = data.results; // Store users for the current page
+      currentPage = parseInt(url.split('page=')[1]) || 1; // Update current page based on URL
+      renderTable(allUsers, currentPage); // Render the table with users
+      renderPagination(data); // Render pagination controls
+    } else {
+      alert('Failed to fetch users. Please try again.');
+    }
+  } catch (error) {
+    console.error('Error fetching users by URL:', error);
+  }
+}
+
+// Function to format the date and time from the backend response
+function formatDateTime(dateTimeString) {
+  const date = new Date(dateTimeString);
+  const datePart = date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+  const timePart = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+  return { date: datePart, time: timePart };
+}
+
+// Delete user functionality
+async function deleteUser(userId) {
+  const url = `/api/delete/${userId}/`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      const modal = new bootstrap.Modal(document.getElementById('deletionSuccessModal'));
+      modal.show();
+      fetchUsers(currentPage); // Refresh current page
+    } else {
+      alert('Failed to delete user');
+    }
+  } catch (error) {
+    console.error('Error deleting user:', error);
+  }
+}
+
+// Event listener for filters
+document.getElementById('filter-btn').addEventListener('click', function (event) {
+  event.preventDefault();
+
+  const username = document.getElementById('search').value;
+  const role = document.getElementById('role').value;
+  const dateJoined = document.getElementById('date-filter').value;
+
+  const filters = {
+    username: username.trim(),
+    role: role.trim(),
+    dateJoined: dateJoined.trim(),
+  };
+
+  fetchUsers(1, filters); // Fetch users with filters starting from page 1
+});
+
+// Event listeners for live filtering
+document.getElementById('search').addEventListener('input', liveFilter);
+document.getElementById('role').addEventListener('change', liveFilter);
+document.getElementById('date-filter').addEventListener('input', liveFilter);
+
+// Function to fetch users with filters
+function liveFilter() {
+  const username = document.getElementById('search').value;
+  const role = document.getElementById('role').value;
+  const dateJoined = document.getElementById('date-filter').value;
+
+  const filters = {
+    username: username.trim(),
+    role: role.trim(),
+    dateJoined: dateJoined.trim(),
+  };
+
+  fetchUsers(1, filters); // Fetch users with filters starting from page 1
+}
+
+// Fetch users on page load
+document.addEventListener('DOMContentLoaded', function () {
+
+
+        const data = JSON.parse(localStorage.getItem("user"));
+        // Role-based navigation control
+        const role = data.role;  // Get the user role from localStorage
+        // Based on the user's role, modify the navbar
+        if (role === 'Journalist' || role === 'Editor') {
+          alert(`${role} Don't have permissions to see this page`)
+          window.history.back();
+        } ;
+        
+
+  fetchUsers();
+
+  document.getElementById('clear-btn').addEventListener('click', function(e) {
+      e.preventDefault();  
+      document.getElementById('search').value = '';  
+      document.getElementById('role').value = '';  
+      document.getElementById('date-filter').value = '';  
+      fetchUsers();
+    });
+});
+document.addEventListener("DOMContentLoaded", function() {
+    const publishDateInput = document.getElementById("date-filter");
+
+    // Initialize Flatpickr with future date restrictions
+    flatpickr(publishDateInput, {
+        maxDate: 'today',  // Only allow future dates
+        dateFormat: "Y-m-d",  // Format the date
+        locale: "en",  // Locale for language (optional)
+        theme: "light",  // Flatpickr theme, you can also use "dark" if desired
+        disableMobile: true,  // Disable mobile version of the picker for better UX
+        placeholder: "Select a future date",
+        onChange: function(selectedDates, dateStr, instance) {
+            // Optionally, you can handle the date change here
+            console.log("Selected date: ", dateStr);
+        }
+    });
+});
+
+
+
+</script>
+{% endblock %}
+{% endblock %}

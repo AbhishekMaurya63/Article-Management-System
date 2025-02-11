@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Article List{% endblock %}
+{% block style %}{% endblock %}
+{% block content %}
+    <!-- Hero Section for Article List Page -->
+    <section class="hero text-center py-5">
+        <div class="container-fluid">
+            <h1 class="display-4">Welcome to ArticleHub</h1>
+            <p class="lead">Explore and read the latest articles from various topics</p>
+            <a href="{% url 'article_list' %}" class="btn btn-light btn-lg">Browse Articles</a>
+        </div>
+    </section>
+
+    <div class="container-fluid mt-3">
+        <div class="row mb-4 d-flex justify-content-center">
+            <div class="col-md-3 mb-2">
+                <input type="text" id="search-title" class="form-control" placeholder="Search by title">
+            </div>
+            <div class="col-md-3 mb-2">
+                <input type="text" id="search-tags" class="form-control" placeholder="Search by tags">
+            </div>
+            <div class="col-md-3 mb-2 text-center position-relative">
+                <!-- Filter Dropdown Trigger -->
+                <button class="btn form-control w-100" id="filter-dropdown-btn">
+                    <i class="fas fa-filter"></i>More Filters
+                </button>
+                <!-- Dropdown for Advanced Filters -->
+        <div id="filter-dropdown" class="card p-3 shadow-lg" style="display: none; position: absolute; right:0; top:50px; z-index: 1050; width: 100%;">
+            <h5 class="mb-3">Advanced Filters</h5>
+            <div class="mb-3">
+                <select id="filter-category" class="form-control">
+                    <option value="">Select Category</option>
+                    <option value="news">News</option>
+                    <option value="opinion">Opinion</option>
+                    <option value="feature">Feature</option>
+                    <option value="technology">Technology</option>
+                    <option value="health">Health</option>
+                    <option value="business">Business</option>
+                    <option value="entertainment">Entertainment</option>
+                    <option value="politics">Politics</option>
+                    <option value="sports">Sports</option>
+                    <option value="lifestyle">Lifestyle</option>
+                    <option value="education">Education</option>
+                    <option value="environment">Environment</option>
+                    <option value="culture">Culture</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <input type="date" id="search-date" class="form-control" placeholder="Search by date">
+            </div>
+            <div class="mb-3">
+                <select id="filter-country" class="form-control">
+                    <option value="">Select Country</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <select id="filter-state" class="form-control">
+                    <option value="">Select State</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <select id="filter-city" class="form-control">
+                    <option value="">Select City</option>
+                </select>
+            </div>
+            <div class="mb-3">
+            <div class="col-md-4 mt-2" style="width: 100%;">
+                <button id="filter-btn" class="btn btn-filter form-control w-100" style="color: #fff; background: #7a1fb1;">Apply Filters</button>
+            </div>
+            <div class="col-md-4 mt-2" style="width: 100%;">
+                <button id="close-btn" class="btn btn-filter form-control w-100" style="color: #fff; background: #7a1fb1;">Close</button>
+            </div>
+        </div>
+        </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <button id="clear-btn" class="btn btn-filter form-control w-100" style="color: #fff; background: #7a1fb1;">Reset Filters</button>
+        </div>
+        </div>
+        
+                <!-- Loading Spinner -->
+                <div id="loading-spinner" class="text-center mb-5">
+                    <div class="spinner-border" role="status" style="color: #7a1fb1;"></div>
+                </div>
+        
+                <!-- Articles Section -->
+                <div class="row" id="articles-container">
+                    
+                    <!-- Articles will be dynamically inserted here -->
+                </div>
+                <div id="no-articles-message" style="display:none; text-align: center; padding: 20px; color: red;">
+                    No articles found.
+                </div>
+                <!-- Pagination -->
+                <nav id="pagination-nav" class="d-flex justify-content-center mt-4">
+                    <ul class="pagination" id="pagination">
+                        <!-- Pagination buttons will be dynamically added -->
+                    </ul>
+                </nav>
+            </div>
+
+{% endblock %}
+{% block script %}
+<script src="{% static 'js/article_list.js' %}"></script>
+{% endblock %}

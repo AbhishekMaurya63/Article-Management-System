@@ -1,0 +1,374 @@
+
+{% extends "DashBoard/nav.html" %}
+{% load static %}
+{% block title %}Articles{% endblock %}
+{% block style %}<link href="{% static 'css/articles.css' %}" rel="stylesheet">
+{% endblock %}
+{% block content %}
+<div class="main-container w-100">
+<div class="container-fluid mt-2 mb-5 pb-5" style="min-height: fit-content; ">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 style="color: var(--primary-color);">Articles</h2>
+    <a href="{% url 'articles:Add_Articles' %}" class="btn btn-primary">Add New Article</a>
+  </div>
+
+  <!-- Filter Section -->
+  <form method="get" id="filter-form" class="mb-3">
+    <div class="row g-2">
+      <div class="col-md-3">
+        <input type="text" name="search" id="search" class="form-control" placeholder="Search by title" value="{{ request.GET.search }}">
+      </div>
+      <div class="col-md-3">
+        <select name="category" id="category" class="form-select">
+          <option value="">Select Category</option>
+           <option value="news" {% if request.GET.category == "news" %}selected{% endif %}>News</option>
+            <option value="opinion" {% if request.GET.category == "opinion" %}selected{% endif %}>Opinion</option>
+            <option value="feature" {% if request.GET.category == "feature" %}selected{% endif %}>Feature</option>
+            <option value="technology" {% if request.GET.category == "technology" %}selected{% endif %}>Technology</option>
+            <option value="health" {% if request.GET.category == "health" %}selected{% endif %}>Health</option>
+            <option value="business" {% if request.GET.category == "business" %}selected{% endif %}>Business</option>
+            <option value="entertainment" {% if request.GET.category == "entertainment" %}selected{% endif %}>Entertainment</option>
+            <option value="politics" {% if request.GET.category == "politics" %}selected{% endif %}>Politics</option>
+            <option value="sports" {% if request.GET.category == "sports" %}selected{% endif %}>Sports</option>
+            <option value="lifestyle" {% if request.GET.category == "lifestyle" %}selected{% endif %}>Lifestyle</option>
+            <option value="education" {% if request.GET.category == "education" %}selected{% endif %}>Education</option>
+            <option value="environment" {% if request.GET.category == "enviroment" %}selected{% endif %}>Environment</option>
+            <option value="culture" {% if request.GET.category == "culture" %}selected{% endif %}>Culture</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select name="status" id="status" class="form-select">
+          <option value="">Select Status</option>
+          <option value="draft" {% if request.GET.status == "draft" %}selected{% endif %}>Draft</option>
+          <option value="review" {% if request.GET.status == "review" %}selected{% endif %}>Review</option>
+          <option value="approved" {% if request.GET.status == "approved" %}selected{% endif %}>Approved</option>
+          <option value="published" {% if request.GET.status == "published" %}selected{% endif %}>Published</option>
+          <option value="rejected" {% if request.GET.status == "rejected" %}selected{% endif %}>Rejected</option>
+        </select>
+      </div>
+      <div class="col-md-3 d-flex justify-content-between">
+        <button type="submit" class="btn btn-primary w-100 " id="filter-btn">Filter</button>
+        <a href="#" class="btn btn-secondary w-100" id="clear-btn">Clear</a>
+      </div>
+    </div>
+  </form>
+
+<!-- Articles Table -->
+<div class="table-responsive rounded mb-5" style="overflow-y: auto; overflow-x: auto;">
+  <table class="table table-bordered table-hover" id="articles-table">
+    <thead class="table-light">
+      <tr>
+        <th class="text-center">Article no.</th>
+        <th class="text-center">Title</th>
+        <th class="text-center">Status</th>
+        <th class="text-center">Author</th>
+        <th class="text-center">Category</th>
+        <th class="text-center">Published date</th>
+        <th class="text-center">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Articles will be loaded here by JavaScript -->
+       <td colspan='7'>No Data Found</td>
+    </tbody>
+  </table>
+</div>
+
+  
+
+  <!-- Pagination -->
+  <nav id="pagination-nav">
+    <ul class="pagination justify-content-center">
+      <!-- Pagination will be added here by JavaScript -->
+    </ul>
+  </nav>
+</div>
+</div>
+
+
+<!-- Modal for Confirming Article Deletion -->
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteConfirmationModalLabel">Confirm Deletion</h5>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this article?</p>
+        <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+      </div>
+      <div class="modal-footer">
+        <!-- Confirm Delete Button -->
+        <button id="confirmDeleteBtn" class="btn btn-danger">Confirm Delete</button>
+        <!-- Cancel Button -->
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Successful Article Deletion -->
+<div class="modal fade" id="deletionSuccessModal" tabindex="-1" aria-labelledby="deletionSuccessModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title" id="deletionSuccessModalLabel">Article Deleted Successfully</h6>
+      </div>
+      <div class="modal-body">
+        <p>Your article has been successfully deleted!</p>
+      </div>
+      <div class="modal-footer">
+        <!-- Button to go back to the dashboard -->
+        <a id="backToDashboardBtn" href="/articles/dashboard/" class="btn btn-primary">Back to Dashboard</a>
+        <!-- Button to see another article (or redirect to article listing) -->
+        <a id="seeAnotherArticleBtn" href="/articles/articles/" class="btn btn-secondary">See Articles</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block script %}
+<script>
+  // Function to fetch articles from the API
+  async function fetchArticles(page = 1) {
+    // Get filter values
+    const search = document.getElementById('search').value;
+    const status = document.getElementById('status').value;
+    const category = document.getElementById('category').value;
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user'));  // Get user data from localStorage
+    const role = user ? user.role : null;  // Check the user's role
+    const id=user.id
+    // Construct the URL with query parameters
+    const url = new URL('http://192.168.97.145:8000/api/articles/');
+    const params = { page: page, search: search, status: status, category: category };
+
+    // If the user is a Journalist, filter by their own articles
+
+    Object.keys(params).forEach(key => params[key] && url.searchParams.append(key, params[key]));
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        const tbody = document.getElementById('articles-table').querySelector('tbody');
+        tbody.innerHTML = '';
+        if (data.results.length === 0) {
+          const noDataRow = document.createElement('tr');
+          noDataRow.innerHTML = `
+            <td colspan="7" class="text-center bg-white">
+              <img src="{% static 'images/no_data.jpg' %}" alt="No Data Found" style="width: 40%;" />
+              <p>No articles found</p>
+            </td>
+          `;
+          tbody.appendChild(noDataRow);
+        } else {
+          data.results.forEach((article, index) => {
+            const row = document.createElement('tr');
+            let statusColor = '';
+    switch (article.status.toLowerCase()) {
+      case 'review':
+        statusColor = 'text-warning bg-light'; // Yellow for review
+        break;
+      case 'approved':
+        statusColor = 'text-primary'; // Blue for approved
+        break;
+      case 'reject':
+        statusColor = 'text-danger'; // Red for rejected
+        break;
+      case 'published':
+        statusColor = 'text-success'; // Green for published
+        break;
+      default:
+        statusColor = 'text-secondary'; // Default fallback color
+    }
+            row.innerHTML = `
+              <td class='text-center'>${(page - 1) * 10 + (index + 1)}</td>
+              <td class='text-center'>${article.title}</td>
+              <td class='text-center ${statusColor}'>${article.status.charAt(0).toUpperCase() + article.status.slice(1)}</td>
+              <td class='text-center'>${article.author_name}</td>
+              <td class='text-center'>${article.category}</td>
+              <td class='text-center'>${article.publish_date}</td>
+              <td class='text-center'>
+                <a href="/articles/articles/${article.id}/" class="btn btn-info btn-sm"><i class='fa fa-eye'></i></a>
+                ${getActionButtons(role, article)}
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+
+        }
+        function getActionButtons(userRole, article) {
+    // Check if the user is a Journalist
+    if (userRole === 'Journalist') {
+        // Hide buttons if the article is approved or published
+        if (article.status === 'approved' || article.status === 'published') {
+            return ''; // Return empty string to hide buttons
+        }
+    }
+    if (userRole === 'Editor') {
+        // Hide buttons if the article is approved or published
+        if (article.status === 'published') {
+            return ''; // Return empty string to hide buttons
+        }
+    }
+    // If the user is not a Journalist (i.e., Editor or Admin), or if the article is not approved/published
+    return `
+      <a href="/articles/update_article/${article.id}/" class="btn btn-warning btn-sm" id="update-button-${article.id}">
+        <i class='fa fa-pencil'></i>
+      </a>
+      <button type="submit" class="btn btn-danger btn-sm" id="delete-button-${article.id}" onclick="showDeleteConfirmationModal(${article.id})">
+        <i class='fa fa-trash'></i>
+      </button>
+    `;
+}
+        const paginationNav = document.getElementById('pagination-nav').querySelector('ul');
+        paginationNav.innerHTML = '';
+
+        if (page > 1) {
+          const prevItem = document.createElement('li');
+          prevItem.classList.add('page-item');
+          const prevLink = document.createElement('a');
+          prevLink.classList.add('page-link');
+          prevLink.href = 'javascript:void(0);';
+          prevLink.textContent = 'First';
+          prevLink.onclick = () => fetchArticles(1);
+          prevItem.appendChild(prevLink);
+          paginationNav.appendChild(prevItem);
+
+          // const prevPage = document.createElement('li');
+          // prevPage.classList.add('page-item');
+          // prevPage.classList.add('previous');
+          // const prevPageLink = document.createElement('a');
+          // prevPageLink.classList.add('page-link');
+          // prevPageLink.href = 'javascript:void(0);';
+          // prevPageLink.textContent = 'Previous';
+          // prevPageLink.onclick = () => fetchArticles(page - 1);
+          // prevPage.appendChild(prevPageLink);
+          // paginationNav.appendChild(prevPage);
+        }
+
+        const total_pages = Math.ceil(data.count / 10);
+        for (let i = 1; i <= total_pages; i++) {
+          const pageItem = document.createElement('li');
+          pageItem.classList.add('page-item');
+          if (page == i) pageItem.classList.add('active');
+          
+          const pageLink = document.createElement('a');
+          pageLink.classList.add('page-link');
+          pageLink.href = 'javascript:void(0);';
+          pageLink.textContent = i;
+          pageLink.onclick = () => fetchArticles(i);
+          
+          pageItem.appendChild(pageLink);
+          paginationNav.appendChild(pageItem);
+        }
+
+        if (page < total_pages) {
+          // const nextPage = document.createElement('li');
+          // nextPage.classList.add('page-item');
+          // const nextPageLink = document.createElement('a');
+          // nextPageLink.classList.add('page-link');
+          // nextPageLink.href = 'javascript:void(0);';
+          // nextPageLink.textContent = 'Next';
+          // nextPageLink.onclick = () => fetchArticles(page + 1);
+          // nextPage.appendChild(nextPageLink);
+          // paginationNav.appendChild(nextPage);
+
+          const lastItem = document.createElement('li');
+          lastItem.classList.add('page-item');
+          const lastLink = document.createElement('a');
+          lastLink.classList.add('page-link');
+          lastLink.href = 'javascript:void(0);';
+          lastLink.textContent = 'Last';
+          lastLink.onclick = () => fetchArticles(total_pages);
+          lastItem.appendChild(lastLink);
+          paginationNav.appendChild(lastItem);
+        }
+      } else {
+        alert('Failed to fetch articles. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error fetching articles:', error);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    fetchArticles(); 
+
+    document.getElementById('filter-form').addEventListener('submit', function(e) {
+      e.preventDefault(); 
+      fetchArticles();
+    });
+
+    document.getElementById('clear-btn').addEventListener('click', function(e) {
+      e.preventDefault();  
+      document.getElementById('search').value = '';  
+      document.getElementById('status').value = '';  
+      document.getElementById('category').value = '';  
+      fetchArticles(); 
+    });
+  });
+
+  async function deletearticle(id) {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`/api/articles/${id}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
+      if (response.ok) {
+        const modal = new bootstrap.Modal(document.getElementById('deletionSuccessModal'));
+        modal.show();
+
+      } else {
+        alert('Failed to Delete article. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error deleting article:', error);
+    }
+  }
+
+  // Event listeners for search, status, and category filters
+  searchInput = document.getElementById('search');
+  statusSelect = document.getElementById('status');
+  categorySelect = document.getElementById('category');
+  searchInput.addEventListener('input', function() {
+    fetchArticles();
+  });
+
+  statusSelect.addEventListener('change', function() {
+    fetchArticles();
+  });
+
+  categorySelect.addEventListener('change', function() {
+    fetchArticles();
+  });
+
+
+function showDeleteConfirmationModal(articleId) {
+    // Show the modal
+    console.log("delete")
+    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
+    modal.show();
+  
+    // When the user confirms deletion
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+      deletearticle(articleId); // Call the deleteArticle function with the articleId
+      modal.hide(); // Hide the modal after deletion
+    });
+  }
+</script>
+{% endblock %}
+{% endblock %}

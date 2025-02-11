@@ -1,0 +1,138 @@
+{%load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration</title>
+    {% load django_bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <link rel="stylesheet" href="{% static 'css/stylesreg.css' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container">
+       <div class="row formRow" id="formRow">
+        <div class="col-lg-6 col-md-12 col-sm-12 user" id="user">
+            <i class="fas fa-user" id="userlogo"></i>
+        </div>
+        <div class="col-lg-6 col-md-12 col-sm-12 userForm pt-3" id="regForm">
+            <div class="row w-100 d-flex justify-content-start regbtn justify-content-center justify-content-md-start">
+                <a href="{% url 'index' %}" class="text-decoration-none" style="width: fit-content;">
+                    <button class="btn" style="width: 200px;">Back to Home Page</button>
+                </a>
+            </div>
+        <form  class="row" id="RegisterForm" onsubmit="return validate(event)" action="/">
+            <table class="table">
+            <tr>
+                <td colspan="2" class="text-center"><h1>Registeration Form</h1></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="font-size: 15px; text-align:center;"><span id="formErr" style="color: red;"></span></td>
+            </tr>
+            <tr>
+                <td class="mb-3">
+                    <label for="firstname" class="form-label">First Name</label>
+                    <input type="text" id="fname" name="fname" style="color: blueviolet;" maxlength="30" class="form-control" placeholder="First Name">
+                    <div id="fnameErr" class="text-danger err"></div>
+                </td>
+                <td class="mb-3">
+                    <label for="lastname" class="form-label">Last Name</label>
+                    <input type="text" id="lname" name="lname" class="form-control" style="color: blueviolet;" maxlength="30" placeholder="Second Name">
+                    <div id="lnameErr" class="text-danger err"></div>
+                </td>
+            </tr>
+            <tr>
+                <td class="mb-3" colspan="2">
+                    <label for="username" class="form-label">User Name</label>
+                    <input type="text" id="userName" name="username" class="form-control" style="color: blueviolet;" maxlength="30" placeholder="User Name">
+                    <div id="usernameErr" class="text-danger err"></div>
+                </td>
+            </tr>
+            <tr>
+                <td class="mb-3" colspan="2">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="text" id="email" name="email" class="form-control" style="color: blueviolet;"  maxlength="100" placeholder="Email">
+                    <div id="emailErr" class="text-danger err"></div>
+                </td>
+            </tr>
+            <tr>
+                <td class="mb-3" colspan="2">
+                    <label for="role" class="form-label">Role</label>
+                    <select class="form-control" id="role" name="role" style="color: blueviolet;"b>
+                        <option value="">Select Role</option>
+                        <option value="Journalist">Jounralist</option>
+                        <option value="Editor">Editor</option>
+                    </select>
+                    <div id="roleErr" class="text-danger err"></div>
+                </td>
+            </tr>
+            <tr>
+                <td class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="inp" id="inp">
+                        <input type="password" id="password" name="password" class="form-control pass" style="color: blueviolet;" maxlength="30" minlength="8" placeholder="Password">
+                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('password', this)">
+                            <i class="fas fa-eye" id="eye-password" style="color: blueviolet;"></i>
+                        </button>
+                    </div>
+                    <div id="passwordErr" class="text-danger err"></div>
+                </td>
+                <td class="mb-3">
+                    <label for="Conpassword" class="form-label">Confirm Password</label>
+                    <div class="inp" id="cinp">
+                    <input type="password" id="copassword" name="copassword" class="form-control pass" style="color: blueviolet;"  maxlength="30" minlength="8" placeholder="Confirm Password">
+                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('copassword', this)">
+                        <i class="fas fa-eye" id="eye-password" style="color: blueviolet;"></i>
+                    </button>
+                </div>
+                    <div id="copasswordErr" class="text-danger err"></div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="font-size: 15px;"><input type="checkbox" style="accent-color: blueviolet;" id="agree" name="agree"><a href="{% url 'Term&con' %}" style="color: blueviolet; text-decoration:none"> Term and Conditions Applied</a></td>
+            </tr>
+            <tr>
+                    
+                    <td class="regbtn" colspan="2">
+                        <button type="submit" class="btn" id="submit-button">
+                            <span id="loader" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display:none;"></span> 
+                            Submit</button>
+                        </td>
+                       
+            </tr>
+            <tr>
+                <td class="text-center" colspan="2">Already Registerd?<a href="{% url 'users:login' %}" style="color: blueviolet;">  Click Here</a></td>
+            </tr>
+            </table>
+        </td>
+    </div>
+       </div>
+    </div>
+
+
+     <!-- Modal for Success Message -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title position-relative d-inline-block" id="successModalLabel">
+                    <i class="fas fa-check-circle"></i> Registration Successful
+                    </h5>
+            </div>
+            <div class="modal-body" id='msg'>
+                Your registration was successful!
+            </div>
+            <div class="modal-footer">
+               <a href="{% url 'users:login' %}"> <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    <script src="{%static 'js/script.js'%}"></script>
+  </body>
+</html>
